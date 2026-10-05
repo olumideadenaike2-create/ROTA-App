@@ -48,3 +48,6 @@ Crew don't have accounts. They pick their name and set a 4-digit PIN the first t
 - PINs are stored as bcrypt hashes. After 5 wrong tries, that name is locked for 15 minutes.
 - The phone remembers the volunteer (name + PIN in local storage) so they don't need to log in again. "Not you?" clears it.
 - A 4-digit PIN can still be guessed by someone determined. Don't put anything sensitive in the app.
+
+## Preview without Supabase
+`npm run dev:mock` runs the app against made-up sample data (`.mock/`). Screenshots are in [`screenshots/`](screenshots/).
