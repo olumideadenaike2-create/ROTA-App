@@ -2,10 +2,10 @@
 
 A mobile-first app for the COPAK 2026 media team (23–25 Oct). Volunteers open a link, pick their name, and see their schedule. They tap **I'm here** to check in. The admin assigns people to role slots and watches a live check-in board.
 
-- **Crew:** `https://copak-crew.<your-subdomain>.workers.dev/`
-- **Admin:** `https://copak-crew.<your-subdomain>.workers.dev/admin`
+- **Crew:** `https://copak-crew.vercel.app/`
+- **Admin:** `https://copak-crew.vercel.app/admin`
 
-Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Cloudflare. See [PLAN.md](PLAN.md) for the build plan.
+Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Vercel. See [PLAN.md](PLAN.md) for the build plan.
 
 ## 1. Supabase setup
 1. Create a project at [supabase.com](https://supabase.com).
@@ -31,15 +31,11 @@ Find both values in Supabase → **Project Settings → API**.
 
 For local work: `cp .env.example .env`, fill in both values, then run `npm install && npm run dev`.
 
-## 4. Deploy to Cloudflare
-1. Cloudflare dashboard → **Workers & Pages → Create → Import a repository** → pick **ROTA-App**.
-2. Build settings:
-   - Build command: `npm run build`
-   - Deploy command: `npx wrangler deploy` (the default)
-3. **Settings → Variables and Secrets → Build variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. They must be *build* variables, because Vite bakes them in at build time. Then redeploy.
-4. `wrangler.jsonc` serves the built `dist/` folder and sends unknown paths (like `/admin`) to the app.
-
-Deploy from your own machine instead: `npm run build && npx wrangler deploy` (with a `.env` file holding the two variables).
+## 4. Deploy to Vercel
+The Vercel project `copak-crew` is linked to this repo, so every push to `main` deploys automatically.
+1. Vercel → **copak-crew → Settings → Environment Variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (Production + Preview).
+2. **Deployments → ⋯ → Redeploy**, so the new build picks them up (Vite bakes them in at build time).
+3. `vercel.json` sends every path (like `/admin`) to the app.
 
 ## Using it
 - **Crew tab:** add volunteers. **Pods tab:** set each pod's lead and deputy, and add or rename roles.

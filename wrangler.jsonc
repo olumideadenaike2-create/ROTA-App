@@ -1,9 +1,0 @@
-{
-  // Cloudflare Workers static-assets deploy. SPA mode serves index.html for /admin etc.
-  "name": "copak-crew",
-  "compatibility_date": "2026-10-01",
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  }
-}
