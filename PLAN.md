@@ -4,7 +4,7 @@
 A mobile-first web app that runs in a phone browser. The admin assigns ~30 volunteers to role slots across 5 sessions (Rig, S1–S4). Volunteers see their own schedule and check in.
 
 ## Architecture
-- **Front end:** Vite + React + Tailwind v3 + react-router. One single-page app with two areas: `/` for crew and `/admin` for the admin. Deployed on Vercel, with an SPA rewrite in `vercel.json`.
+- **Front end:** Vite + React + Tailwind v3 + react-router. One single-page app with two areas: `/` for crew and `/admin` for the admin. Deployed on Cloudflare Workers (static assets, SPA mode) via `wrangler.jsonc`.
 - **Back end:** Supabase Postgres, with RLS turned on for every table.
   - **Admin:** Supabase email/password auth. Who counts as admin is decided by the `admins` table (user_id), checked by `is_admin()`.
   - **Crew:** no Supabase auth. Crew talk to the database only through `SECURITY DEFINER` RPC functions that check the volunteer's PIN on every call:
