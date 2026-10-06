@@ -43,10 +43,14 @@ The Vercel project `copak-crew` is linked to this repo, so every push to `main` 
 - **Board tab:** live check-ins for each session. Green = here, grey = assigned but missing, dashed = unassigned slot.
 - If a volunteer forgets their PIN: **Crew tab → ⋯ → Reset PIN**. They choose a new one the next time they open the app.
 
+## Updating an existing database
+If you ran `schema.sql` before a feature was added, run the matching file in `supabase/migrations/` in the SQL Editor:
+- `002_pod_team.sql` lets crew see who else is in their pod each session.
+
 ## How crew access works (honest version)
 Crew don't have accounts. They pick their name and set a 4-digit PIN the first time they open the app. **This identifies people; it is not security.** It stops someone casually checking in a friend, and that's all.
 - The anon key cannot read or write any table directly. Every table has RLS with admin-only policies.
-- Crew go through 4 database functions (`crew_list`, `crew_set_pin`, `crew_schedule`, `crew_check_in`). Each checks the PIN on every call and returns or writes data for **that volunteer only**. `crew_list` returns names only, with no phone numbers.
+- Crew go through 4 database functions (`crew_list`, `crew_set_pin`, `crew_schedule`, `crew_check_in`). Each checks the PIN on every call and returns or writes data for **that volunteer only**. `crew_list` returns names only, with no phone numbers. Crew can also see the names, roles and callsigns of others in their own pod for sessions they're on, but never their phone numbers.
 - PINs are stored as bcrypt hashes. After 5 wrong tries, that name is locked for 15 minutes.
 - The phone remembers the volunteer (name + PIN in local storage) so they don't need to log in again. "Not you?" clears it.
 - A 4-digit PIN can still be guessed by someone determined. Don't put anything sensitive in the app.

@@ -27,7 +27,10 @@ const rpcs = {
   crew_list: volunteers.map((v, i) => ({ id: v.id, name: v.name, has_pin: i !== 2 })),
   crew_schedule: { me: { id: 'v3', name: 'Samuel Mensah' }, schedule: [
     slot('S1'), slot('S2', { role: 'Camera 3', room_position: 'Balcony centre', callsign: 'CAM 3' }),
-    slot('S4', { role: 'Floor Manager', room_position: 'Stage door', callsign: 'FLOOR' })] },
+    slot('S4', { role: 'Floor Manager', room_position: 'Stage door', callsign: 'FLOOR' })],
+    pod_team: ['S1','S2','S4'].flatMap((sid) => roles.slice(0, 9).map((r, i) => ({ session_id: sid, pod: 'Live Production',
+      role: r.name, name: volunteers[i].name, callsign: r.name.startsWith('Camera') ? r.name.replace('Camera ', 'CAM ') : null,
+      is_me: i === 2, checked_in: sid === 'S1' && i % 3 !== 0 }))) },
 }
 const q = (data) => { const p = Promise.resolve({ data, error: null }); return Object.assign(p, { select: () => q(data), order: () => q(data), eq: () => q(data), single: () => q(data) }) }
 export const supabase = {

@@ -140,7 +140,21 @@ begin
         join pods p on p.id = r.pod_id
         left join volunteers l on l.id = p.lead_id
         left join check_ins c on c.session_id = s.id and c.volunteer_id = vid
-        where a.volunteer_id = vid) x), '[]'::jsonb));
+        where a.volunteer_id = vid) x), '[]'::jsonb),
+    -- Everyone assigned in the same pod(s) for the sessions this volunteer is on. Names/roles only, no phones.
+    'pod_team', coalesce((
+      select jsonb_agg(row_to_json(t) order by t.session_id, t.pod_order, t.role_order) from (
+        select a.session_id, p.name as pod, p.sort_order as pod_order, r.sort_order as role_order,
+               r.name as role, r.section, v.name, a.callsign, a.room_position,
+               (v.id = vid) as is_me, (c.id is not null) as checked_in
+        from assignments a
+        join roles r on r.id = a.role_id
+        join pods p on p.id = r.pod_id
+        join volunteers v on v.id = a.volunteer_id
+        left join check_ins c on c.session_id = a.session_id and c.volunteer_id = v.id
+        where (a.session_id, r.pod_id) in (
+          select a2.session_id, r2.pod_id from assignments a2 join roles r2 on r2.id = a2.role_id
+          where a2.volunteer_id = vid)) t), '[]'::jsonb));
 end $$;
 
 -- Returns {"error": "..."} or {"checked_in_at": "..."}

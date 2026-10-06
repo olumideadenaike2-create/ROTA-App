@@ -15,6 +15,7 @@ function groupBySession(rows) {
 
 export default function Schedule({ auth, data, reload, onSignOut }) {
   const sessions = groupBySession(data.schedule)
+  const teamFor = (sid) => (data.pod_team ?? []).filter((t) => t.session_id === sid)
   const current = pickCurrent(sessions)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState(null)
@@ -56,6 +57,7 @@ export default function Schedule({ auth, data, reload, onSignOut }) {
             </button>
           )}
           {err && <p className="mt-2 text-red-700">{err}</p>}
+          <PodTeam team={teamFor(current.session_id)} open />
         </section>
       )}
 
@@ -72,6 +74,7 @@ export default function Schedule({ auth, data, reload, onSignOut }) {
                 <p className="mb-2 text-sm text-stone-600">{sessionTimes(s)}</p>
                 {s.notes && <p className="mb-2 text-sm italic text-stone-600">{s.notes}</p>}
                 {s.slots.map((x) => <SlotDetails key={x.role} s={x} />)}
+                <PodTeam team={teamFor(s.session_id)} />
               </li>
             ))}
           </ul>
@@ -98,5 +101,38 @@ function SlotDetails({ s }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+// Who else is on your pod this session. Names and roles only, never phone numbers.
+function PodTeam({ team, open = false }) {
+  if (team.length === 0) return null
+  const pods = [...new Set(team.map((t) => t.pod))]
+  return (
+    <details open={open} className="mt-2 border-t border-stone-200/70 pt-2">
+      <summary className="cursor-pointer py-1 text-[15px] font-semibold text-olive-700">
+        Your pod this session ({team.length})
+      </summary>
+      {pods.map((pod) => (
+        <div key={pod} className="mt-1">
+          {pods.length > 1 && <p className="label mt-2">{pod}</p>}
+          <ul className="divide-y divide-stone-100">
+            {team.filter((t) => t.pod === pod).map((t, i) => (
+              <li key={i} className="flex items-center justify-between gap-2 py-2">
+                <span className="min-w-0">
+                  <span className={`block truncate font-medium ${t.is_me ? 'text-olive-700' : ''}`}>
+                    {t.name}{t.is_me && ' (you)'}
+                  </span>
+                  <span className="block truncate text-sm text-stone-500">
+                    {[t.role, t.callsign].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
+                {t.checked_in && <span className="shrink-0 text-sm font-medium text-olive-700">✓ In</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </details>
   )
 }
