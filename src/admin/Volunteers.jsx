@@ -8,9 +8,30 @@ export default function Volunteers() {
   const { data, error, reload } = useData()
   const [editing, setEditing] = useState(null) // volunteer object or blank
   const [msg, setMsg] = useState(null)
+  const [podFilter, setPodFilter] = useState('all')      // 'all' | 'none' | pod id
+  const [status, setStatus] = useState('all')           // 'all' | 'assigned' | 'unassigned'
+  const [sessionFilter, setSessionFilter] = useState('any') // 'any' | session id
+  const [q, setQ] = useState('')
 
   if (!data) return <Loading error={error} />
   const podName = Object.fromEntries(data.pods.map((p) => [p.id, p.name]))
+  const roleById = Object.fromEntries(data.roles.map((r) => [r.id, r]))
+  const sessionById = Object.fromEntries(data.sessions.map((s) => [s.id, s]))
+
+  // volunteer id -> their slots (optionally limited to one session), in session order
+  const slotsFor = (vid) => data.assignments
+    .filter((a) => a.volunteer_id === vid && (sessionFilter === 'any' || a.session_id === sessionFilter))
+    .sort((a, b) => sessionById[a.session_id].starts_at.localeCompare(sessionById[b.session_id].starts_at))
+
+  // "Team" matches a volunteer's home pod, or any pod they're assigned a role in.
+  const inPod = (v, slots) => podFilter === 'all'
+    || (podFilter === 'none' ? !v.pod_id : v.pod_id === podFilter || slots.some((a) => roleById[a.role_id]?.pod_id === podFilter))
+
+  const rows = data.volunteers.map((v) => ({ v, slots: slotsFor(v.id) })).filter(({ v, slots }) =>
+    v.name.toLowerCase().includes(q.toLowerCase())
+    && inPod(v, podFilter === 'none' ? [] : slotsFor(v.id))
+    && (status === 'all' || (status === 'assigned' ? slots.length > 0 : slots.length === 0)))
+  const filtering = podFilter !== 'all' || status !== 'all' || sessionFilter !== 'any' || q
 
   async function resetPin(v) {
     if (!confirm(`Reset ${v.name}'s PIN? They'll choose a new one next time they open the app.`)) return
@@ -33,9 +54,35 @@ export default function Volunteers() {
       </div>
       {msg && <p className="mb-3 rounded-xl bg-olive-50 p-3 text-sm">{msg}</p>}
       {editing && <Editor v={editing} pods={data.pods} onDone={() => { setEditing(null); reload() }} />}
+      {data.volunteers.length > 0 && (
+        <div className="card mb-3 space-y-2 p-3">
+          <input className="input" placeholder="Search by name" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="grid grid-cols-3 gap-2">
+            <select className="input px-2 text-sm" value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Assignment">
+              <option value="all">Everyone</option>
+              <option value="assigned">Assigned</option>
+              <option value="unassigned">Unassigned</option>
+            </select>
+            <select className="input px-2 text-sm" value={podFilter} onChange={(e) => setPodFilter(e.target.value)} aria-label="Team">
+              <option value="all">All teams</option>
+              {data.pods.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              <option value="none">No team</option>
+            </select>
+            <select className="input px-2 text-sm" value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)} aria-label="Session">
+              <option value="any">Any session</option>
+              {data.sessions.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center justify-between text-sm text-stone-500">
+            <span>Showing {rows.length} of {data.volunteers.length}</span>
+            {filtering && <button className="underline" onClick={() => { setPodFilter('all'); setStatus('all'); setSessionFilter('any'); setQ('') }}>Clear filters</button>}
+          </div>
+        </div>
+      )}
       {data.volunteers.length === 0 && <p className="card text-center text-stone-500">No volunteers yet. Add your first one above.</p>}
+      {data.volunteers.length > 0 && rows.length === 0 && <p className="card text-center text-stone-500">No crew match these filters.</p>}
       <ul className="space-y-2">
-        {data.volunteers.map((v) => (
+        {rows.map(({ v, slots }) => (
           <li key={v.id} className="card flex items-center gap-3 p-3">
             {v.photo_url
               ? <img src={v.photo_url} alt="" className="h-11 w-11 rounded-full object-cover" />
@@ -43,6 +90,15 @@ export default function Volunteers() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{v.name}</p>
               <p className="truncate text-sm text-stone-500">{[podName[v.pod_id], v.phone].filter(Boolean).join(' · ') || 'No pod'}</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {slots.length === 0
+                  ? <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-500">Unassigned{sessionFilter !== 'any' && ` in ${sessionById[sessionFilter].code}`}</span>
+                  : slots.map((a) => (
+                    <span key={a.id} className="rounded-full bg-olive-50 px-2 py-0.5 text-xs text-olive-700">
+                      {sessionById[a.session_id].code} · {roleById[a.role_id]?.name}
+                    </span>
+                  ))}
+              </div>
             </div>
             <details className="relative">
               <summary className="btn-ghost list-none px-3">⋯</summary>
