@@ -5,6 +5,7 @@ import Board from './Board'
 import Assign from './Assign'
 import Volunteers from './Volunteers'
 import Pods from './Pods'
+import Export from './Export'
 
 export default function AdminApp() {
   const [session, setSession] = useState(undefined)
@@ -43,12 +44,14 @@ export default function AdminApp() {
         <NavLink to="assign" className={tab}>Assign</NavLink>
         <NavLink to="volunteers" className={tab}>Crew</NavLink>
         <NavLink to="pods" className={tab}>Pods</NavLink>
+        <NavLink to="export" className={tab}>Export</NavLink>
       </nav>
       <Routes>
         <Route path="board" element={<Board />} />
         <Route path="assign" element={<Assign />} />
         <Route path="volunteers" element={<Volunteers />} />
         <Route path="pods" element={<Pods />} />
+        <Route path="export" element={<Export />} />
         <Route path="*" element={<Navigate to="board" replace />} />
       </Routes>
     </div>
