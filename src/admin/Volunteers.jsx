@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
 import { Loading, useData } from './useData'
+import CrewTable from './CrewTable'
 
 const blank = { name: '', phone: '', pod_id: '', photo_url: '' }
 
@@ -12,6 +13,7 @@ export default function Volunteers() {
   const [status, setStatus] = useState('all')           // 'all' | 'assigned' | 'unassigned'
   const [sessionFilter, setSessionFilter] = useState('any') // 'any' | session id
   const [q, setQ] = useState('')
+  const [view, setView] = useState(() => { try { return localStorage.getItem('copak-crew-view') || 'cards' } catch { return 'cards' } })
 
   if (!data) return <Loading error={error} />
   const podName = Object.fromEntries(data.pods.map((p) => [p.id, p.name]))
@@ -49,8 +51,16 @@ export default function Volunteers() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-stone-600">{data.volunteers.length} crew</p>
-        <button className="btn-primary" onClick={() => setEditing(blank)}>+ Add volunteer</button>
+        <div className="flex items-center gap-3">
+          <p className="whitespace-nowrap text-stone-600">{data.volunteers.length} crew</p>
+          <div className="flex rounded-lg border border-stone-200 bg-white p-0.5 text-sm">
+            {['cards', 'table'].map((k) => (
+              <button key={k} onClick={() => { setView(k); try { localStorage.setItem('copak-crew-view', k) } catch {} }}
+                className={`rounded-md px-3 py-1.5 font-medium capitalize ${view === k ? 'bg-ink text-white' : 'text-stone-600'}`}>{k}</button>
+            ))}
+          </div>
+        </div>
+        <button className="btn-primary shrink-0" onClick={() => setEditing(blank)}>+ Add<span className="hidden sm:inline">&nbsp;volunteer</span></button>
       </div>
       {msg && <p className="mb-3 rounded-xl bg-olive-50 p-3 text-sm">{msg}</p>}
       {editing && <Editor v={editing} pods={data.pods} onDone={() => { setEditing(null); reload() }} />}
@@ -81,7 +91,8 @@ export default function Volunteers() {
       )}
       {data.volunteers.length === 0 && <p className="card text-center text-stone-500">No volunteers yet. Add your first one above.</p>}
       {data.volunteers.length > 0 && rows.length === 0 && <p className="card text-center text-stone-500">No crew match these filters.</p>}
-      <ul className="space-y-2">
+      {view === 'table' && <CrewTable rows={rows} data={data} reload={reload} />}
+      <ul className={`space-y-2 ${view === 'table' ? 'hidden' : ''}`}>
         {rows.map(({ v, slots }) => (
           <li key={v.id} className="card flex items-center gap-3 p-3">
             {v.photo_url

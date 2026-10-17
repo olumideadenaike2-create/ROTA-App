@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { supabase } from '../supabase'
 import Board from './Board'
 import Assign from './Assign'
@@ -10,6 +10,7 @@ import Export from './Export'
 export default function AdminApp() {
   const [session, setSession] = useState(undefined)
   const [isAdmin, setIsAdmin] = useState(null)
+  const wide = useLocation().pathname.includes('volunteers') // room for the crew table on laptops
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -34,7 +35,7 @@ export default function AdminApp() {
 
   const tab = ({ isActive }) => `flex-1 rounded-lg py-2 text-center text-sm font-semibold ${isActive ? 'bg-olive-600 text-white' : 'text-stone-600'}`
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-16 pt-4">
+    <div className={`mx-auto px-4 pb-16 pt-4 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}>
       <header className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-bold">COPAK Crew · Admin</h1>
         <button className="text-sm text-stone-500" onClick={() => supabase.auth.signOut()}>Sign out</button>

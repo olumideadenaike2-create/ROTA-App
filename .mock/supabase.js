@@ -33,8 +33,20 @@ const rpcs = {
       is_me: i === 2, checked_in: sid === 'S1' && i % 3 !== 0 }))) },
 }
 const q = (data) => { const p = Promise.resolve({ data, error: null }); return Object.assign(p, { select: () => q(data), order: () => q(data), eq: () => q(data), single: () => q(data) }) }
+// Minimal writes so admin edits work in preview: update().eq(), upsert(onConflict), insert, delete().eq()
+const writer = (t) => Object.assign(q(tables[t]), {
+  update: (patch) => ({ eq: (col, val) => { tables[t].filter((r) => r[col] === val).forEach((r) => Object.assign(r, patch)); return q(null) } }),
+  upsert: (row, { onConflict } = {}) => {
+    const keys = (onConflict ?? 'id').split(',')
+    let r = tables[t].find((x) => keys.every((k) => x[k] === row[k]))
+    if (r) Object.assign(r, row); else tables[t].push(r = { id: 'n' + Math.random(), ...row })
+    return q(r)
+  },
+  insert: (row) => { tables[t].push({ id: 'n' + Math.random(), ...row }); return q(null) },
+  delete: () => ({ eq: (col, val) => { tables[t] = tables[t].filter((r) => r[col] !== val); return q(null) } }),
+})
 export const supabase = {
-  from: (t) => q(tables[t]),
+  from: writer,
   rpc: (n) => q(rpcs[n]),
   auth: { getSession: async () => ({ data: { session: location.pathname.startsWith('/admin') ? {} : null } }),
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
