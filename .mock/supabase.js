@@ -18,11 +18,16 @@ const volunteers = names.map((name, i) => ({ id: 'v'+(i+1), name, phone: '07700 
 const assignments = roles.map((r, i) => ({ id: 'a'+i, session_id: 'S1', role_id: r.id, volunteer_id: i < 21 ? 'v'+(i+1) : null,
   room_position: i === 2 ? 'Riser, stage left' : null, callsign: i === 2 ? 'CAM 2' : null }))
 const checkIns = ['v1','v2','v3','v5','v6','v8','v9','v10','v12','v14','v15','v17','v19','v20'].map((v, i) => ({ session_id: 'S1', volunteer_id: v, checked_in_at: `2026-10-23T13:${String(40+i).padStart(2,'0')}:00Z` }))
-const tables = { sessions, pods, roles, volunteers, assignments, check_ins: checkIns }
+const availability = volunteers.flatMap((v, i) => sessions.map((s, j) => ({ volunteer_id: v.id, session_id: s.id,
+  status: ['yes', 'yes', 'maybe', 'no', null][(i + j) % 5] }))).filter((x) => x.status)
+const tables = { sessions, pods, roles, volunteers, assignments, check_ins: checkIns, availability }
 
 const slot = (code, extra) => ({ session_id: code, ...sessions.find((s) => s.code === code), session_name: code, pod: 'Live Production', section: 'Broadcast',
   role: 'Camera 2', pod_lead: 'Tunde Adeyemi', pod_lead_phone: '07700900100', room_position: 'Riser, stage left', callsign: 'CAM 2', ...extra })
+const myAnswers = { S1: 'yes', S3: 'no' }
 const rpcs = {
+  crew_availability: { sessions, answers: myAnswers },
+  crew_set_availability: { ok: true },
   is_admin: true,
   crew_list: volunteers.map((v, i) => ({ id: v.id, name: v.name, has_pin: i !== 2 })),
   crew_schedule: { me: { id: 'v3', name: 'Samuel Mensah' }, schedule: [

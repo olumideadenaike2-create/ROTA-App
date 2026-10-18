@@ -46,6 +46,7 @@ The Vercel project `copak-crew` is linked to this repo, so every push to `main` 
 ## Updating an existing database
 If you ran `schema.sql` before a feature was added, run the matching file in `supabase/migrations/` in the SQL Editor:
 - `002_pod_team.sql` lets crew see who else is in their pod each session.
+- `003_availability.sql` lets crew say which sessions they can serve (Yes / Maybe / No). Admin sees it in the Crew table (coloured bar per session), the Assign dropdowns (available people first), the Crew filters, and the CSV export. You're warned before assigning someone to a session they said No or Maybe to.
 
 ## How crew access works (honest version)
 Crew don't have accounts. They pick their name and set a 4-digit PIN the first time they open the app. **This identifies people; it is not security.** It stops someone casually checking in a friend, and that's all.

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
-import { Loading, useData } from './useData'
+import { Loading, availOf, useData } from './useData'
 import CrewTable from './CrewTable'
 
 const blank = { name: '', phone: '', pod_id: '', photo_url: '' }
@@ -32,7 +32,19 @@ export default function Volunteers() {
   const rows = data.volunteers.map((v) => ({ v, slots: slotsFor(v.id) })).filter(({ v, slots }) =>
     v.name.toLowerCase().includes(q.toLowerCase())
     && inPod(v, podFilter === 'none' ? [] : slotsFor(v.id))
-    && (status === 'all' || (status === 'assigned' ? slots.length > 0 : slots.length === 0)))
+    && matchStatus(v, slots))
+  function matchStatus(v, slots) {
+    if (status === 'all') return true
+    if (status === 'assigned') return slots.length > 0
+    if (status === 'unassigned') return slots.length === 0
+    // availability: for the chosen session, or (Any session) for at least one / for none
+    const sids = sessionFilter === 'any' ? data.sessions.map((s) => s.id) : [sessionFilter]
+    const answers = sids.map((sid) => availOf(data, v.id, sid))
+    if (status === 'free') return answers.some((x) => x === 'yes') && (sessionFilter === 'any' || slots.length === 0)
+    if (status === 'yes' || status === 'maybe' || status === 'no') return answers.some((x) => x === status)
+    if (status === 'noanswer') return answers.every((x) => x === undefined)
+    return true
+  }
   const filtering = podFilter !== 'all' || status !== 'all' || sessionFilter !== 'any' || q
 
   async function resetPin(v) {
@@ -72,6 +84,13 @@ export default function Volunteers() {
               <option value="all">Everyone</option>
               <option value="assigned">Assigned</option>
               <option value="unassigned">Unassigned</option>
+              <optgroup label="Availability (uses session filter)">
+                <option value="free">Available &amp; not yet assigned</option>
+                <option value="yes">Said available</option>
+                <option value="maybe">Said maybe</option>
+                <option value="no">Said not available</option>
+                <option value="noanswer">Hasn't answered</option>
+              </optgroup>
             </select>
             <select className="input px-2 text-sm" value={podFilter} onChange={(e) => setPodFilter(e.target.value)} aria-label="Team">
               <option value="all">All teams</option>

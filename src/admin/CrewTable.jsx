@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
+import { AVAIL_LABEL, availOf, confirmAvailability } from './useData'
 
 // Spreadsheet-style view: one row per volunteer, one role dropdown per session.
 // Picking a role assigns them to that slot (replacing whoever held it); "—" removes them from the session.
@@ -21,6 +22,7 @@ export default function CrewTable({ rows, data, reload }) {
   function setRole(v, session, current, roleId) {
     const target = roleId ? slot[`${session.id}|${roleId}`] : null
     const holder = target?.volunteer_id && target.volunteer_id !== v.id ? vol[target.volunteer_id] : null
+    if (roleId && !current && !confirmAvailability(data, v, session)) return
     if (holder && !confirm(`${holder.name} already has this role in ${session.code}. Replace them with ${v.name}?`)) return
     return run(`${v.id}|${session.id}`, async () => {
       if (current) {
@@ -65,8 +67,10 @@ export default function CrewTable({ rows, data, reload }) {
                 {data.sessions.map((s) => {
                   const mine = data.assignments.filter((a) => a.session_id === s.id && a.volunteer_id === v.id)
                   const current = mine[0]
+                  const av = availOf(data, v.id, s.id)
+                  const edge = { yes: 'border-l-olive-500', maybe: 'border-l-amber-400', no: 'border-l-red-400' }[av] ?? 'border-l-transparent'
                   return (
-                    <td key={s.id} className="px-2 py-1.5">
+                    <td key={s.id} className={`border-l-4 px-2 py-1.5 ${edge}`} title={AVAIL_LABEL[av] ?? 'No answer'}>
                       <select className={`input min-h-[40px] w-40 px-2 text-sm ${current ? 'border-olive-500 bg-olive-50' : 'text-stone-400'}`}
                         value={current?.role_id ?? ''} disabled={saving === `${v.id}|${s.id}`}
                         onChange={(e) => setRole(v, s, current, e.target.value)}>
@@ -89,7 +93,13 @@ export default function CrewTable({ rows, data, reload }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-stone-500">Changes save as soon as you pick. A name in brackets means that role is taken — picking it moves the role to this person.</p>
+      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
+        <span><span className="mr-1 inline-block h-3 w-1 bg-olive-500 align-middle" />Available</span>
+        <span><span className="mr-1 inline-block h-3 w-1 bg-amber-400 align-middle" />Maybe</span>
+        <span><span className="mr-1 inline-block h-3 w-1 bg-red-400 align-middle" />Not available</span>
+        <span>No bar = no answer yet</span>
+      </p>
+      <p className="mt-1 text-xs text-stone-500">Changes save as soon as you pick. A name in brackets means that role is taken — picking it moves the role to this person.</p>
     </div>
   )
 }

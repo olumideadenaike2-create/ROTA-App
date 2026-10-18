@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 import { fmtDay, fmtStamp, pickCurrent, sessionTimes } from '../format'
 import { Shell } from './CrewApp'
+import Availability from './Availability'
 
 // One volunteer may hold more than one slot in a session; group rows by session.
 function groupBySession(rows) {
@@ -35,9 +36,11 @@ export default function Schedule({ auth, data, reload, onSignOut }) {
         <button onClick={onSignOut} className="text-sm text-stone-500">Not you?</button>
       </div>
 
+      <Availability auth={auth} />
+
       {!current ? (
         <div className="card text-center text-stone-600">
-          You're not on any sessions yet. Check back once the rota is out.
+          You're not on any sessions yet. Tell us when you can serve above, then check back once the rota is out.
         </div>
       ) : (
         <section className="card mb-6 border-olive-100 bg-olive-50">

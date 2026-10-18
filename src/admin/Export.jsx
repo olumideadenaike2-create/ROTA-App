@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { fmtDay, fmtStamp, sessionTimes } from '../format'
-import { Loading, useData } from './useData'
+import { AVAIL_LABEL, Loading, availOf, useData } from './useData'
 
 const STATUS = {
   all: 'All slots',
@@ -131,7 +131,8 @@ function buildRows(d) {
     const v = vol[a.volunteer_id] ?? null
     return { session: s, pod: pod[r.pod_id], role: r, volunteer: v,
       room_position: a.room_position ?? null, callsign: a.callsign ?? null,
-      checkIn: v ? ins[`${s.id}|${v.id}`] ?? null : null }
+      checkIn: v ? ins[`${s.id}|${v.id}`] ?? null : null,
+      availability: v ? AVAIL_LABEL[availOf(d, v.id, s.id)] ?? 'No answer' : '' }
   }))
 }
 
@@ -149,9 +150,9 @@ const statusText = (r) => (!r.volunteer ? 'Unassigned' : r.checkIn ? `Here ${fmt
 
 function toCsv(rows, withPhone) {
   const head = ['Session', 'Day', 'Crew call', 'Pod', 'Section', 'Role', 'Name', ...(withPhone ? ['Phone'] : []),
-    'Room position', 'Callsign', 'Status', 'Checked in at']
+    'Room position', 'Callsign', 'Availability', 'Status', 'Checked in at']
   const body = rows.map((r) => [r.session.code, r.session.day, r.session.crew_call?.slice(0, 5), r.pod?.name, r.role.section,
-    r.role.name, r.volunteer?.name ?? 'Unassigned', ...(withPhone ? [r.volunteer?.phone] : []), r.room_position, r.callsign,
+    r.role.name, r.volunteer?.name ?? 'Unassigned', ...(withPhone ? [r.volunteer?.phone] : []), r.room_position, r.callsign, r.availability,
     !r.volunteer ? 'Unassigned' : r.checkIn ? 'Here' : 'Not checked in', r.checkIn ? new Date(r.checkIn.checked_in_at).toISOString() : ''])
   const cell = (x) => {
     const s = x == null ? '' : String(x)

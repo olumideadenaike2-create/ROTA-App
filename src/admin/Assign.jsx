@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { pickCurrent } from '../format'
-import { Loading, SessionTabs, useData } from './useData'
+import { AVAIL_LABEL, Loading, SessionTabs, availOf, confirmAvailability, useData } from './useData'
 
 export default function Assign() {
   const { data, error, reload, setData } = useData()
@@ -20,7 +20,16 @@ export default function Assign() {
   const busy = new Map() // volunteer -> roles already held in this session
   for (const a of Object.values(slotByRole)) if (a.volunteer_id) busy.set(a.volunteer_id, (busy.get(a.volunteer_id) ?? 0) + 1)
 
+  const session = data.sessions.find((s) => s.id === sid)
+  const rank = { yes: 0, maybe: 1, undefined: 2, no: 3 }
+  const people = [...data.volunteers].sort((x, y) =>
+    rank[availOf(data, x.id, sid)] - rank[availOf(data, y.id, sid)] || x.name.localeCompare(y.name))
+
   async function save(roleId, patch) {
+    if (patch.volunteer_id) {
+      const v = data.volunteers.find((x) => x.id === patch.volunteer_id)
+      if (!confirmAvailability(data, v, session)) return
+    }
     const row = { session_id: sid, role_id: roleId, ...slotByRole[roleId], ...patch }
     delete row.id
     const { data: saved, error: err } = await supabase.from('assignments')
@@ -71,11 +80,11 @@ export default function Assign() {
                         <select className={`input ${a.volunteer_id ? '' : 'text-stone-400'}`} value={a.volunteer_id ?? ''}
                           onChange={(e) => save(r.id, { volunteer_id: e.target.value || null })}>
                           <option value="">Unassigned</option>
-                          {data.volunteers.map((v) => (
-                            <option key={v.id} value={v.id}>
-                              {v.name}{busy.has(v.id) && v.id !== a.volunteer_id ? ' (already on a slot)' : ''}
-                            </option>
-                          ))}
+                          {people.map((v) => {
+                            const av = availOf(data, v.id, sid)
+                            const tags = [av ? AVAIL_LABEL[av] : 'no answer', busy.has(v.id) && v.id !== a.volunteer_id && 'already on a slot'].filter(Boolean)
+                            return <option key={v.id} value={v.id}>{av === 'yes' ? '✓ ' : av === 'no' ? '✗ ' : ''}{v.name} ({tags.join(', ')})</option>
+                          })}
                         </select>
                       </div>
                       <div className="flex gap-2">

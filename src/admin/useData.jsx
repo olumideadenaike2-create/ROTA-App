@@ -17,7 +17,10 @@ export function useData() {
     ])
     const err = [s, p, r, v, a, c].find((x) => x.error)?.error
     if (err) return setError(err.message)
-    setData({ sessions: s.data, pods: p.data, roles: r.data, volunteers: v.data, assignments: a.data, checkIns: c.data })
+    // Availability is optional: before migration 003 the table doesn't exist, so treat as "no answers".
+    const av = await supabase.from('availability').select('volunteer_id,session_id,status')
+    const availability = Object.fromEntries((av.error ? [] : av.data).map((x) => [`${x.volunteer_id}|${x.session_id}`, x.status]))
+    setData({ sessions: s.data, pods: p.data, roles: r.data, volunteers: v.data, assignments: a.data, checkIns: c.data, availability })
   }, [])
 
   useEffect(() => { reload() }, [reload])
@@ -39,4 +42,16 @@ export function SessionTabs({ sessions, value, onChange }) {
 
 export function Loading({ error }) {
   return <p className={`py-10 text-center ${error ? 'text-red-700' : 'text-stone-500'}`}>{error ?? 'Loading…'}</p>
+}
+
+// availability lookup: 'yes' | 'no' | 'maybe' | undefined (no answer)
+export const availOf = (data, vid, sid) => data.availability?.[`${vid}|${sid}`]
+export const AVAIL_LABEL = { yes: 'Available', maybe: 'Maybe', no: 'Not available' }
+
+// Ask before putting someone on a session they said they can't (or might not) do.
+export function confirmAvailability(data, v, session) {
+  const a = availOf(data, v.id, session.id)
+  if (a === 'no') return confirm(`${v.name} said they're NOT available for ${session.code}. Assign anyway?`)
+  if (a === 'maybe') return confirm(`${v.name} said "maybe" for ${session.code}. Assign anyway?`)
+  return true
 }
