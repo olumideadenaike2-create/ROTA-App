@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { fmtDay, fmtStamp, pickCurrent, sessionTimes } from '../format'
 import { Shell } from './CrewApp'
@@ -20,6 +20,13 @@ export default function Schedule({ auth, data, reload, onSignOut }) {
   const current = pickCurrent(sessions)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState(null)
+  // Venue "today" comes from the server so a wrong phone clock can't open check-in early.
+  const [today, setToday] = useState(null)
+  useEffect(() => {
+    const local = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) // YYYY-MM-DD
+    supabase.rpc('venue_today').then(({ data, error }) => setToday(!error && data ? data : local))
+  }, [])
+  const checkInState = !current || !today ? 'loading' : current.day === today ? 'open' : current.day > today ? 'early' : 'closed'
 
   async function checkIn() {
     setBusy(true); setErr(null)
@@ -54,10 +61,19 @@ export default function Schedule({ auth, data, reload, onSignOut }) {
             <div className="mt-4 rounded-xl bg-olive-600 p-4 text-center text-lg font-semibold text-white">
               ✓ Checked in at {fmtStamp(current.checked_in_at)}
             </div>
-          ) : (
+          ) : checkInState === 'open' ? (
             <button onClick={checkIn} disabled={busy} className="btn-primary mt-4 w-full min-h-[72px] text-2xl">
               {busy ? 'Checking in…' : 'I’m here'}
             </button>
+          ) : checkInState === 'loading' ? null : (
+            <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4 text-center">
+              <p className="text-lg font-semibold text-stone-600">
+                {checkInState === 'early' ? `Check-in opens on ${fmtDay(current.day)}` : 'Check-in has closed'}
+              </p>
+              <p className="text-sm text-stone-500">
+                {checkInState === 'early' ? 'Come back on the day and tap “I’m here” when you arrive.' : `This session was on ${fmtDay(current.day)}.`}
+              </p>
+            </div>
           )}
           {err && <p className="mt-2 text-red-700">{err}</p>}
           <PodTeam team={teamFor(current.session_id)} open />

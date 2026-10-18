@@ -40,13 +40,14 @@ The Vercel project `copak-crew` is linked to this repo, so every push to `main` 
 ## Using it
 - **Crew tab:** add volunteers. **Pods tab:** set each pod's lead and deputy, and add or rename roles.
 - **Assign tab:** pick a session, pick a person for each slot, and type in the room position and callsign (they save when you tap out of the field). Use **Copy these assignments to…** to copy a finished session to another one, then adjust.
-- **Board tab:** live check-ins for each session. Green = here, grey = assigned but missing, dashed = unassigned slot.
+- **Board tab:** live check-ins for each session. Tap a name to mark them here, or tap a green one to undo a check-in. Green = here, grey = assigned but missing, dashed = unassigned slot.
 - If a volunteer forgets their PIN: **Crew tab → ⋯ → Reset PIN**. They choose a new one the next time they open the app.
 
 ## Updating an existing database
 If you ran `schema.sql` before a feature was added, run the matching file in `supabase/migrations/` in the SQL Editor:
 - `002_pod_team.sql` lets crew see who else is in their pod each session.
 - `003_availability.sql` lets crew say which sessions they can serve (Yes / Maybe / No). Admin sees it in the Crew table (coloured bar per session), the Assign dropdowns (available people first), the Crew filters, and the CSV export. You're warned before assigning someone to a session they said No or Maybe to.
+- `004_checkin_today_only.sql` only lets crew check in on the day of the session (Europe/London time); otherwise they see when check-in opens or that it has closed.
 
 ## How crew access works (honest version)
 Crew don't have accounts. They pick their name and set a 4-digit PIN the first time they open the app. **This identifies people; it is not security.** It stops someone casually checking in a friend, and that's all.
