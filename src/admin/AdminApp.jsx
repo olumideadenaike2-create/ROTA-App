@@ -7,14 +7,21 @@ import Volunteers from './Volunteers'
 import Pods from './Pods'
 import Export from './Export'
 
+// Invite and password-reset emails land here with "type=invite" or "type=recovery" in the URL hash.
+const arrivedToSetPassword = /type=(invite|recovery)/.test(window.location.hash)
+
 export default function AdminApp() {
   const [session, setSession] = useState(undefined)
+  const [mustSetPassword, setMustSetPassword] = useState(arrivedToSetPassword)
   const [isAdmin, setIsAdmin] = useState(null)
   const wide = useLocation().pathname.includes('volunteers') // room for the crew table on laptops
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s)
+      if (event === 'PASSWORD_RECOVERY') setMustSetPassword(true)
+    })
     return () => sub.subscription.unsubscribe()
   }, [])
 
@@ -25,6 +32,7 @@ export default function AdminApp() {
 
   if (session === undefined) return null
   if (!session) return <Login />
+  if (mustSetPassword) return <SetPassword email={session.user?.email} onDone={() => setMustSetPassword(false)} />
   if (isAdmin === null) return <p className="p-6 text-stone-500">Loading…</p>
   if (!isAdmin) return (
     <div className="mx-auto max-w-md p-6 text-center">
@@ -59,10 +67,47 @@ export default function AdminApp() {
   )
 }
 
+function SetPassword({ email, onDone }) {
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [err, setErr] = useState(null)
+  const [busy, setBusy] = useState(false)
+  async function submit(e) {
+    e.preventDefault()
+    if (password.length < 10) return setErr('Use at least 10 characters.')
+    if (password !== confirm) return setErr("The passwords don't match.")
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) return setErr(error.message)
+    window.history.replaceState(null, '', window.location.pathname)
+    onDone()
+  }
+  return (
+    <form onSubmit={submit} className="mx-auto max-w-sm space-y-3 px-4 pt-16">
+      <h1 className="text-2xl font-bold">Choose your password</h1>
+      {email && <p className="text-stone-600">For {email}</p>}
+      <input className="input" type="password" placeholder="New password (10+ characters)" value={password}
+        onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" autoFocus />
+      <input className="input" type="password" placeholder="Repeat password" value={confirm}
+        onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+      {err && <p className="text-red-700">{err}</p>}
+      <button className="btn-primary w-full" disabled={busy}>{busy ? 'Saving…' : 'Save password and continue'}</button>
+    </form>
+  )
+}
+
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState(null)
+  const [info, setInfo] = useState(null)
+  async function forgot() {
+    if (!email) return setErr('Enter your email first, then tap "Forgot password?".')
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/admin` })
+    setErr(error?.message ?? null)
+    if (!error) setInfo(`If ${email} has an admin account, a link to set a new password is on its way.`)
+  }
   async function submit(e) {
     e.preventDefault()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -74,7 +119,9 @@ function Login() {
       <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
       <input className="input" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
       {err && <p className="text-red-700">{err}</p>}
+      {info && <p className="rounded-xl bg-olive-50 p-3 text-sm">{info}</p>}
       <button className="btn-primary w-full">Sign in</button>
+      <button type="button" onClick={forgot} className="w-full text-sm text-stone-500 underline">Forgot password?</button>
     </form>
   )
 }

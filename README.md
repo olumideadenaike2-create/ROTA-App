@@ -14,6 +14,9 @@ Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Vercel. See [PLAN.md
    - Times are stored as **Europe/London**. If the venue is in another time zone, find-and-replace `Europe/London` (for example with `Africa/Lagos`) before you run the seed. The zone is only used to work out which session is "now/next".
 
 ## 2. Create your admin login
+**To add another admin who sets their own password:** Authentication → Users → **Add user → Send invitation**, then run the `insert into admins …` line below with their email. They click the email link, land on "Choose your password", and are signed in. (Authentication → URL Configuration: Site URL `https://copak-crew.vercel.app`, and add `https://copak-crew.vercel.app/admin` under Redirect URLs.) Anyone can use **Forgot password?** on the sign-in page later.
+
+**Your own login:**
 1. Supabase → **Authentication → Users → Add user → Create new user**. Enter your email and a strong password, and tick "Auto confirm".
 2. Back in the SQL Editor, run:
    ```sql
