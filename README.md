@@ -30,7 +30,7 @@ Find both values in Supabase → **Project Settings → API**.
 | Variable | Value |
 |---|---|
 | `VITE_SUPABASE_URL` | Project URL, e.g. `https://abcd.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | The **anon / public** key (never use the service-role key) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | The **publishable** key, `sb_publishable_…` (Project Settings → API Keys). Never use a secret / service-role key. The legacy `VITE_SUPABASE_ANON_KEY` still works if already set. |
 
 For local work: `cp .env.example .env`, fill in both values, then run `npm install && npm run dev`.
 
@@ -38,7 +38,7 @@ For local work: `cp .env.example .env`, fill in both values, then run `npm insta
 Static requests on Cloudflare Workers are free and unmetered, so a traffic spike can't cause a bill or take the site down.
 1. Cloudflare dashboard → **Workers & Pages → Create → Import a repository** → pick **ROTA-App**.
 2. Build command: `npm run build` · Deploy command: `npx wrangler deploy` (default).
-3. **Settings → Variables and Secrets → Build variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then redeploy (Vite bakes them in at build time).
+3. **Settings → Variables and Secrets → Build variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, then redeploy (Vite bakes them in at build time).
 4. `wrangler.jsonc` serves `dist/` and sends unknown paths (like `/admin`) to the app.
 5. In Supabase → **Authentication → URL Configuration**, set the Site URL and Redirect URL (`…/admin`) to the new address.
 
