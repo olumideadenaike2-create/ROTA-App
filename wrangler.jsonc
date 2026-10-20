@@ -1,6 +1,6 @@
 {
   // Cloudflare Workers static-assets deploy. SPA mode serves index.html for /admin etc.
-  "name": "copak-crew",
+  "name": "rota-app",
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist",
