@@ -5,7 +5,7 @@ A mobile-first app for the COPAK 2026 media team (23–25 Oct). Volunteers open 
 - **Crew:** `https://copak-crew.vercel.app/`
 - **Admin:** `https://copak-crew.vercel.app/admin`
 
-Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Vercel. See [PLAN.md](PLAN.md) for the build plan.
+Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Cloudflare Workers. See [PLAN.md](PLAN.md) for the build plan.
 
 ## 1. Supabase setup
 1. Create a project at [supabase.com](https://supabase.com).
@@ -34,11 +34,15 @@ Find both values in Supabase → **Project Settings → API**.
 
 For local work: `cp .env.example .env`, fill in both values, then run `npm install && npm run dev`.
 
-## 4. Deploy to Vercel
-The Vercel project `copak-crew` is linked to this repo, so every push to `main` deploys automatically.
-1. Vercel → **copak-crew → Settings → Environment Variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (Production + Preview).
-2. **Deployments → ⋯ → Redeploy**, so the new build picks them up (Vite bakes them in at build time).
-3. `vercel.json` sends every path (like `/admin`) to the app.
+## 4. Deploy to Cloudflare (recommended)
+Static requests on Cloudflare Workers are free and unmetered, so a traffic spike can't cause a bill or take the site down.
+1. Cloudflare dashboard → **Workers & Pages → Create → Import a repository** → pick **ROTA-App**.
+2. Build command: `npm run build` · Deploy command: `npx wrangler deploy` (default).
+3. **Settings → Variables and Secrets → Build variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then redeploy (Vite bakes them in at build time).
+4. `wrangler.jsonc` serves `dist/` and sends unknown paths (like `/admin`) to the app.
+5. In Supabase → **Authentication → URL Configuration**, set the Site URL and Redirect URL (`…/admin`) to the new address.
+
+`vercel.json` is kept so the old Vercel deployment keeps working during the switch; delete the Vercel project once Cloudflare is live.
 
 ## Using it
 - **Crew tab:** add volunteers. **Pods tab:** set each pod's lead and deputy, and add or rename roles.
