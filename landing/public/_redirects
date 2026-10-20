@@ -1,0 +1,4 @@
+# Old links from when the app lived on the root domain
+/admin          https://dashboard.teamrota.app/admin          301
+/admin/*        https://dashboard.teamrota.app/admin/:splat   301
+/crew           https://dashboard.teamrota.app/               301

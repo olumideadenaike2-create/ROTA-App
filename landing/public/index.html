@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TeamRota — rotas for every church department</title>
+<meta name="description" content="Plan rotas for every church department, text volunteers when you publish, and see who's arrived on the day. From £5 a month.">
+<meta name="theme-color" content="#18222d">
+<meta property="og:title" content="TeamRota — rotas for every church department">
+<meta property="og:description" content="Department heads plan, volunteers reply with one tap, unit heads see who's here. No app to install.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233f6b35'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' stroke='white' stroke-width='3.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<script src="config.js"></script>
+<style>
+/* Layout: one centred 1120px column; hero is copy + a live-looking phone; sections alternate paper / white bands. */
+:root{
+  --paper:#f6f5f1; --white:#ffffff; --ink:#18222d; --ink-2:#3d4955; --muted:#6c7681; --line:#e3e1da;
+  --olive:#3f6b35; --olive-deep:#2f5228; --on-olive:#ffffff; --olive-soft:#e4eddc; --gold:#d99a1e; --gold-soft:#fbefd4; --red:#b5392d; --red-soft:#f9e1dd;
+  --display:"Bricolage Grotesque", "Figtree", system-ui, sans-serif; --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gutter:max(20px, env(safe-area-inset-left, 0px)); --gutter-r:max(20px, env(safe-area-inset-right, 0px));
+}
+@media (prefers-color-scheme: dark){:root{
+  --paper:#12171d; --white:#192029; --ink:#eef0ec; --ink-2:#c6ccd2; --muted:#949ca5; --line:#2b333d;
+  --olive:#7faa6c; --olive-deep:#a6cc93; --on-olive:#10170d; --olive-soft:#223020; --gold:#e8b44a; --gold-soft:#352a14; --red:#f0897d; --red-soft:#3a201d; color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{max-width:100%}
+h1,h2,h3{font-family:var(--display);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800}
+h2{font-size:clamp(28px,4vw,42px);font-weight:800}
+h3{font-size:20px;font-weight:600}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-left:var(--gutter);padding-right:var(--gutter-r)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--olive)}
+.lead{font-size:clamp(18px,2vw,21px);color:var(--ink-2);max-width:56ch}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:12px;font-weight:700;text-decoration:none;border:1.5px solid transparent;font-size:16px;cursor:pointer;font-family:var(--body)}
+.btn-primary{background:var(--olive);color:var(--on-olive)}
+.links a.btn-primary{color:var(--on-olive)}
+.btn-primary:hover{background:var(--olive-deep)}
+.btn-ghost{border-color:var(--line);background:var(--white)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* COPAK notice + nav */
+.notice{background:var(--ink);color:var(--paper);font-size:14px;text-align:center;padding:9px var(--gutter-r) 9px var(--gutter)}
+.notice a{font-weight:700;color:var(--paper)}
+nav.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:21px;text-decoration:none}
+.logo i{width:30px;height:30px;border-radius:8px;background:var(--olive);display:grid;place-items:center}
+.links{display:flex;align-items:center;gap:26px;font-weight:600;font-size:15px}
+.links a{text-decoration:none;color:var(--ink-2);white-space:nowrap}
+.links a:hover{color:var(--ink)}
+@media (max-width:760px){.links .hide-sm{display:none}.links{gap:14px}}
+@media (max-width:400px){.links .btn-primary{display:none}}
+
+/* Hero */
+.hero{padding:64px 0 72px}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center}
+.hero .wrap > *{min-width:0}
+.hero h1 em{font-style:normal;color:var(--olive);white-space:nowrap}
+.hero .lead{margin-top:20px}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.trust{margin-top:22px;font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px}
+.trust span::before{content:"✓ ";color:var(--olive);font-weight:800}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr}.hero{padding-top:40px}}
+
+/* Phone mock (real UI, built in HTML) */
+.phone{width:340px;max-width:100%;margin:0 auto;background:var(--white);border:9px solid var(--ink);border-radius:40px;padding:18px 16px 20px;box-shadow:0 30px 60px -20px rgba(24,34,45,.35);position:relative}
+.phone .sb{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--ink-2);margin:-4px 6px 12px}
+.pc{border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:10px;background:var(--white)}
+.pc.hi{background:var(--olive-soft);border-color:transparent}
+.pc .k{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--olive-deep)}
+.pc h4{font-family:var(--display);font-size:19px;margin:3px 0 2px}
+.pc .m{font-size:13px;color:var(--muted)}
+.pc dl{display:grid;grid-template-columns:72px 1fr;gap:3px 8px;margin:10px 0;font-size:14px}
+.pc dt{color:var(--muted)} .pc dd{margin:0;font-weight:600}
+.here{display:flex;align-items:center;justify-content:center;min-height:58px;border-radius:12px;background:var(--olive);color:var(--on-olive);font-weight:800;font-size:21px;border:0;width:100%;font-family:var(--body);cursor:pointer;transition:transform .15s}
+.here:active{transform:scale(.98)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:7px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.pill{font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.ok{background:var(--olive-soft);color:var(--olive-deep)} .wait{background:var(--gold-soft);color:#8a5a00} .bad{background:var(--red-soft);color:var(--red)}
+@media (prefers-color-scheme: dark){.wait{color:var(--gold)}}
+.float{position:absolute;right:-24px;bottom:-26px;background:var(--ink);color:var(--paper);border-radius:14px;padding:10px 13px;font-size:13px;max-width:200px;box-shadow:0 14px 30px -10px rgba(0,0,0,.4)}
+.float b{display:block;font-size:12px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+@media (max-width:420px){.float{display:none}}
+
+/* Sections */
+section{padding:84px 0}
+section.band{background:var(--white);border-block:1px solid var(--line)}
+.head{max-width:680px;margin-bottom:44px}
+.head p{margin-top:14px;color:var(--ink-2)}
+
+/* Steps: a real sequence, so it's numbered */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+.step{position:relative;padding:26px;border-radius:18px;background:var(--paper);border:1px solid var(--line)}
+.step::before{counter-increment:s;content:counter(s);font-family:var(--display);font-weight:800;font-size:15px;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;margin-bottom:16px}
+.step p{color:var(--ink-2);margin-top:8px;font-size:16px}
+.step .eg{margin-top:14px;font-size:13px;font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;background:var(--white);border:1px dashed var(--line);border-radius:10px;padding:10px;color:var(--ink-2)}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+
+/* Roles: the church's own hierarchy */
+.tree{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.role{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:22px}
+.role .tag{display:inline-block;font-size:12px;font-weight:700;border-radius:8px;padding:3px 9px;background:var(--olive-soft);color:var(--olive-deep);margin-bottom:12px}
+.role ul{margin:12px 0 0;padding:0;list-style:none;font-size:15px;color:var(--ink-2)}
+.role li{padding:5px 0 5px 22px;position:relative}
+.role li::before{content:"";position:absolute;left:2px;top:13px;width:10px;height:2px;background:var(--olive)}
+.hier{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:26px;font-weight:700;font-size:15px}
+.hier span{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+.hier i{font-style:normal;color:var(--muted)}
+@media (max-width:980px){.tree{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.tree{grid-template-columns:1fr}}
+
+/* Texts */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.split > *{min-width:0}
+.bubbles{display:flex;flex-direction:column;gap:10px}
+.bub{background:var(--paper);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:12px 15px;font-size:15px;max-width:380px}
+.bub small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+.facts{margin-top:22px;display:grid;gap:12px}
+.fact{display:flex;gap:12px;align-items:flex-start}
+.fact b{flex:none;width:26px;height:26px;border-radius:8px;background:var(--olive-soft);color:var(--olive-deep);display:grid;place-items:center;font-size:14px}
+@media (max-width:860px){.split{grid-template-columns:1fr}}
+
+/* Pricing */
+.toggle{display:inline-flex;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:28px}
+.toggle button{border:0;background:none;padding:9px 16px;border-radius:9px;font-weight:700;font-family:var(--body);font-size:14px;color:var(--ink-2);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.plan{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column}
+.plan.pop{border:2px solid var(--olive);position:relative}
+.plan.pop::after{content:"Most churches";position:absolute;top:-12px;left:22px;background:var(--olive);color:var(--on-olive);font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px}
+.plan .for{color:var(--muted);font-size:14px;margin-top:2px}
+.price{font-family:var(--display);font-size:44px;font-weight:800;margin:14px 0 2px;font-variant-numeric:tabular-nums}
+.price small{font-family:var(--body);font-size:15px;color:var(--muted);font-weight:600}
+.plan ul{list-style:none;padding:0;margin:16px 0 22px;font-size:15px;color:var(--ink-2);flex:1}
+.plan li{padding:5px 0}
+.plan li::before{content:"✓  ";color:var(--olive);font-weight:800}
+.extras{margin-top:20px;color:var(--muted);font-size:15px}
+@media (max-width:1000px){.plans{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.plans{grid-template-columns:1fr}}
+
+/* FAQ */
+.faq{max-width:780px}
+details{border-bottom:1px solid var(--line);padding:18px 0}
+summary{font-weight:700;font-size:18px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::after{content:"+";font-size:22px;color:var(--olive);line-height:1}
+details[open] summary::after{content:"−"}
+details p{margin-top:10px;color:var(--ink-2)}
+
+/* Early access */
+.join{background:var(--ink);color:var(--paper);border-radius:28px;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.join > *{min-width:0}
+.join p{color:color-mix(in srgb,var(--paper) 75%,transparent);margin-top:12px}
+.join h2{color:var(--paper)}
+form{display:grid;gap:10px}
+.field{display:grid;gap:6px;font-size:14px;font-weight:600}
+input,select{font:inherit;font-size:16px;min-height:50px;border-radius:12px;border:1.5px solid transparent;padding:0 14px;background:var(--paper);color:var(--ink);width:100%}
+.form-row{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.msg{font-size:15px;min-height:1.4em}
+.msg.good{color:#a8d58f} .msg.err{color:#ffb4a8}
+@media (max-width:860px){.join{grid-template-columns:1fr;padding:32px 24px}.form-row{grid-template-columns:1fr}}
+
+footer{padding:44px 0 calc(44px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px}
+footer a{text-decoration:none;font-weight:600}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="notice">Serving at COPAK this weekend? <a href="https://dashboard.teamrota.app/">Open your crew page →</a></div>
+
+<nav class="top" aria-label="Main"><div class="wrap">
+  <a class="logo" href="#top" aria-label="TeamRota home"><i><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></i>TeamRota</a>
+  <div class="links">
+    <a class="hide-sm" href="#how">How it works</a>
+    <a class="hide-sm" href="#pricing">Pricing</a>
+    <a href="https://dashboard.teamrota.app/admin">Sign in</a>
+    <a class="btn btn-primary" href="#join" style="min-height:42px;padding:0 16px;font-size:15px">Get early access</a>
+  </div>
+</div></nav>
+
+<main id="top">
+<header class="hero"><div class="wrap">
+  <div>
+    <p class="eyebrow">For church departments</p>
+    <h1 style="margin-top:14px">Every department's rota. <em>One tap</em> to say “I'm here.”</h1>
+    <p class="lead">Department heads plan the rota. Volunteers get one text and reply with a tap. On Sunday, unit heads can see who's arrived and who's missing. Volunteers don't need to install an app or remember a password.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#join">Get early access</a>
+      <a class="btn btn-ghost" href="#how">See how it works</a>
+    </div>
+    <div class="trust"><span>From £5 a month</span><span>Texts included</span><span>Made in the UK</span></div>
+  </div>
+
+  <div class="phone" aria-label="Example of a volunteer's screen">
+    <div class="sb"><span>8:11</span><span>5G ▮</span></div>
+    <div class="pc hi">
+      <p class="k">Today</p>
+      <h4>Sun 9am Service</h4>
+      <p class="m">Call 8:15am · Doors 8:45</p>
+      <dl><dt>Role</dt><dd>Camera 1</dd><dt>Team</dt><dd>Media › Broadcast</dd><dt>Unit head</dt><dd>Tunde A.</dd></dl>
+      <button class="here" id="demo-here" type="button">I'm here</button>
+    </div>
+    <div class="pc">
+      <div class="row"><span><b>Your unit today</b></span><span class="m">4</span></div>
+      <div class="row"><span>Tunde · Director</span><span class="pill ok">Here</span></div>
+      <div class="row"><span>Grace · Camera 2</span><span class="pill ok">Here</span></div>
+      <div class="row"><span>Ruth · Camera 1 (you)</span><span class="pill wait" id="demo-me">Not yet</span></div>
+      <div class="row"><span>Samuel · Graphics</span><span class="pill wait">Not yet</span></div>
+    </div>
+    <div class="float" aria-hidden="true"><b>Unit head sees</b>3 here · 1 missing · 0 unfilled</div>
+  </div>
+</div></header>
+
+<section class="band" id="how"><div class="wrap">
+  <div class="head"><p class="eyebrow">How it works</p><h2 style="margin-top:10px">From Thursday's rota to Sunday's check-in.</h2></div>
+  <div class="steps">
+    <div class="step"><h3>Plan</h3><p>Heads fill the rota in a simple grid. You can see who's available, who's already serving in another department, and who hasn't served for a while.</p><div class="eg">Camera 4 → Precious S. · available · last served 5 weeks ago</div></div>
+    <div class="step"><h3>Publish</h3><p>Nothing goes out while you edit. When you tap Publish, each person gets one short text with a link to accept or decline.</p><div class="eg">Grace Chapel: You're on Camera 2, Sun 9am, call 8:15. Reply: teamrota.app/r/x7k2</div></div>
+    <div class="step"><h3>Check in</h3><p>On the day, volunteers tap “I'm here”. It still works on poor venue Wi‑Fi. Unit heads see who has arrived and who is missing, and can text anyone who's late.</p><div class="eg">Broadcast: 6 here · 2 missing · 1 unfilled</div></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><p class="eyebrow">Built the way churches are organised</p><h2 style="margin-top:10px">Departments, units, heads and assistants, with everyone seeing what they need.</h2>
+    <p>Each person sees only their own part of the church. A unit head sees their unit, a department head sees their department, and the church admin sees everything.</p></div>
+  <div class="hier" aria-label="Church structure"><span>Church</span><i>›</i><span>Department · Head + Assistant</span><i>›</i><span>Unit · Head + Assistant</span><i>›</i><span>Roles</span><i>›</i><span>Volunteers</span></div>
+  <div class="tree">
+    <div class="role"><span class="tag">Volunteers</span><h3>Know where to be</h3><ul><li>Role, call time and position</li><li>Accept or decline with one tap</li><li>Say which dates they can serve</li><li>Ask someone to cover a shift</li></ul></div>
+    <div class="role"><span class="tag">Unit heads</span><h3>Run the day</h3><ul><li>Live board: here, missing, unfilled</li><li>Mark people here, or undo a check-in</li><li>Approve swaps</li><li>Text anyone who's late</li></ul></div>
+    <div class="role"><span class="tag">Department heads</span><h3>Plan the month</h3><ul><li>Rota grid with availability</li><li>Warns if someone is booked in another department</li><li>Suggested fill that rotates people fairly</li><li>Publish when ready</li></ul></div>
+    <div class="role"><span class="tag">Church admins</span><h3>See the whole church</h3><ul><li>Gaps across all departments</li><li>Text allowance for each department</li><li>DBS expiry reminders</li><li>Attendance reports and exports</li></ul></div>
+  </div>
+</div></section>
+
+<section class="band"><div class="wrap split">
+  <div>
+    <p class="eyebrow">Texts that don't run away with your budget</p>
+    <h2 style="margin-top:10px">One text per person when you publish. Never a surprise bill.</h2>
+    <div class="facts">
+      <div class="fact"><b>1</b><p><strong>Nothing is sent while you edit.</strong> Change the rota as often as you like. Each person gets one message when you publish.</p></div>
+      <div class="fact"><b>£</b><p><strong>Texts are included in every plan.</strong> No Twilio account to set up. You can top up 100 texts for £6.</p></div>
+      <div class="fact"><b>∞</b><p><strong>If your texts run out, nobody misses a change.</strong> Texting pauses and volunteers get a free email and app alert instead.</p></div>
+    </div>
+  </div>
+  <div class="bubbles" aria-label="Example texts a volunteer receives">
+    <div class="bub">Grace Chapel: Hi Ruth, you're on <b>Camera 1</b> for Sun 9am Service, call 8:15am. Reply: teamrota.app/r/x7k2<small>Monday · after the rota is published</small></div>
+    <div class="bub">Grace Chapel: Update — you're now on <b>Camera 2</b> for Sun 9am. Details: teamrota.app/r/x7k2<small>Wednesday · one text for three edits</small></div>
+    <div class="bub">Grace Chapel: Reminder — Camera 2 tomorrow, call 8:15am. Reply STOP to opt out.<small>Saturday · day-before reminder</small></div>
+  </div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="head"><p class="eyebrow">Pricing</p><h2 style="margin-top:10px">Start with one department. Add the rest when they ask.</h2>
+    <p>Every plan includes check-in, availability, exports and free email and app alerts. Heads and assistants are free, so you don't pay for leaders.</p></div>
+  <div class="toggle" role="group" aria-label="Billing period">
+    <button type="button" aria-pressed="true" data-period="month">Monthly</button>
+    <button type="button" aria-pressed="false" data-period="year">Yearly · 2 months free</button>
+  </div>
+  <div class="plans">
+    <div class="plan"><h3>Team</h3><p class="for">One department</p><p class="price" data-m="5">£5<small>/month</small></p>
+      <ul><li>1 department</li><li>30 volunteers</li><li>50 texts a month</li><li>Check-in and live board</li><li>CSV and PNG export</li></ul><a class="btn btn-ghost" href="#join">Get early access</a></div>
+    <div class="plan pop"><h3>Church</h3><p class="for">Up to 5 departments</p><p class="price" data-m="15">£15<small>/month</small></p>
+      <ul><li>120 volunteers</li><li>150 texts a month</li><li>Unlimited heads and assistants</li><li>Warnings when someone is double-booked</li><li>Swaps and templates</li></ul><a class="btn btn-primary" href="#join">Get early access</a></div>
+    <div class="plan"><h3>Growing</h3><p class="for">Unlimited departments</p><p class="price" data-m="35">£35<small>/month</small></p>
+      <ul><li>350 volunteers</li><li>350 texts a month</li><li>Suggested fill</li><li>Text budget per department</li><li>Reports</li></ul><a class="btn btn-ghost" href="#join">Get early access</a></div>
+    <div class="plan"><h3>Large</h3><p class="for">Multi-site churches</p><p class="price" data-m="69">£69<small>/month</small></p>
+      <ul><li>1,000 volunteers</li><li>800 texts a month</li><li>DBS and training records</li><li>Multiple sites</li><li>Priority support</li></ul><a class="btn btn-ghost" href="#join">Talk to us</a></div>
+  </div>
+  <p class="extras">Extra texts: 100 for £6 or 500 for £25. Extra volunteers: 50 for £3 a month. 14-day free trial at launch.</p>
+</div></section>
+
+<section class="band"><div class="wrap faq">
+  <div class="head" style="margin-bottom:12px"><p class="eyebrow">Questions</p><h2 style="margin-top:10px">What churches ask us</h2></div>
+  <details><summary>Do volunteers need to download an app?</summary><p>No. They tap the link in their text and see their role. They can add it to their home screen if they want quick access, but they don't have to.</p></details>
+  <details><summary>We already use ChurchSuite or Planning Center. Can we use both?</summary><p>Yes. TeamRota only does rotas and check-in, so it works alongside your church management system. Import from a spreadsheet or CSV now; direct sync is planned for the Large plan.</p></details>
+  <details><summary>What happens if we run out of texts?</summary><p>Texts pause automatically, so you're never charged for more. Volunteers still get every change by email and app alert. Top up whenever you like.</p></details>
+  <details><summary>Who can see volunteers' phone numbers?</summary><p>Only church admins and the heads of the department a volunteer serves in. Volunteers can see who's in their unit, but not their phone numbers. We never sell your data.</p></details>
+  <details><summary>Does check-in work if the venue Wi‑Fi is poor?</summary><p>Yes. A check-in is saved on the phone and syncs as soon as signal comes back.</p></details>
+  <details><summary>Can we try it first?</summary><p>Yes. Join early access and we'll set up your church with a free trial and help importing your volunteers.</p></details>
+</div></section>
+
+<section id="join"><div class="wrap">
+  <div class="join">
+    <div>
+      <h2>Get early access</h2>
+      <p>We're opening TeamRota to a small group of churches first. Leave your email and we'll set up your church and help you import your volunteers.</p>
+    </div>
+    <form id="waitlist" novalidate>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@yourchurch.org"></div>
+      <div class="form-row">
+        <div class="field"><label for="church">Church</label><input id="church" name="church" autocomplete="organization" placeholder="Grace Chapel"></div>
+        <div class="field"><label for="volunteers">Volunteers</label><select id="volunteers" name="volunteers"><option value="">Choose…</option><option>Under 30</option><option>30–120</option><option>120–350</option><option>350+</option></select></div>
+      </div>
+      <button class="btn btn-primary" type="submit" id="join-btn" style="margin-top:6px">Join early access</button>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© 2026 TeamRota · Rotas for church departments</span>
+  <span><a href="https://dashboard.teamrota.app/admin">Sign in</a> &nbsp;·&nbsp; <a href="https://dashboard.teamrota.app/">Crew page</a> &nbsp;·&nbsp; <a href="mailto:hello@teamrota.app">hello@teamrota.app</a></span>
+</div></footer>
+
+<script>
+// Demo button in the hero phone
+document.getElementById('demo-here').addEventListener('click', (e) => {
+  e.currentTarget.textContent = '✓ Checked in 8:11'
+  const me = document.getElementById('demo-me'); me.textContent = 'Here'; me.className = 'pill ok'
+  document.querySelector('.float').innerHTML = '<b>Unit head sees</b>4 here · 0 missing · 0 unfilled'
+})
+
+// Monthly / yearly prices
+document.querySelectorAll('.toggle button').forEach((b) => b.addEventListener('click', () => {
+  const yearly = b.dataset.period === 'year'
+  document.querySelectorAll('.toggle button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+  document.querySelectorAll('.price').forEach((p) => {
+    const m = Number(p.dataset.m)
+    p.innerHTML = yearly ? `£${m * 10}<small>/year</small>` : `£${m}<small>/month</small>`
+  })
+}))
+
+// Early-access form → Supabase "waitlist" table (insert-only for the public)
+const form = document.getElementById('waitlist'), msg = document.getElementById('msg'), btn = document.getElementById('join-btn')
+form.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const email = form.email.value.trim()
+  msg.className = 'msg'
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = 'msg err'; msg.textContent = 'Enter a valid email address.'; return }
+  const cfg = window.TEAMROTA || {}
+  if (!cfg.supabaseUrl || !cfg.publishableKey) { msg.className = 'msg err'; msg.textContent = 'Sign-ups open soon. Email hello@teamrota.app in the meantime.'; return }
+  btn.disabled = true; btn.textContent = 'Joining…'
+  try {
+    const res = await fetch(`${cfg.supabaseUrl}/rest/v1/waitlist`, {
+      method: 'POST',
+      headers: { apikey: cfg.publishableKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ email, church: form.church.value.trim() || null, volunteers: form.volunteers.value || null }),
+    })
+    if (res.ok || res.status === 409) {
+      msg.className = 'msg good'
+      msg.textContent = res.status === 409 ? "You're already on the list. We'll be in touch." : "You're on the list. We'll email you when your church's trial is ready."
+      form.reset()
+    } else throw new Error(String(res.status))
+  } catch {
+    msg.className = 'msg err'; msg.textContent = "That didn't go through. Try again, or email hello@teamrota.app."
+  } finally { btn.disabled = false; btn.textContent = 'Join early access' }
+})
+</script>
+</body>
+</html>
