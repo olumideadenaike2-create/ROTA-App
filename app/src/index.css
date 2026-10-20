@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 min-h-[44px] font-semibold transition active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-olive-600 text-white hover:bg-olive-700; }
+  .btn-ghost { @apply btn bg-white border border-stone-200 hover:bg-stone-50; }
+  .btn-sm { @apply min-h-[34px] px-3 text-sm rounded-lg; }
+  .input { @apply w-full rounded-xl border border-stone-300 bg-white px-3 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-olive-500; }
+  .card { @apply rounded-2xl bg-white border border-stone-200 p-4; }
+  .label { @apply text-xs font-semibold uppercase tracking-wide text-stone-500; }
+  .h1 { @apply font-display text-2xl font-extrabold tracking-tight; }
+  .pill { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+}
