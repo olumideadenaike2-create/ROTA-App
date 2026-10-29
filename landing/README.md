@@ -6,7 +6,7 @@ The app itself lives at **dashboard.teamrota.app** (Worker `rota-app`, repo root
 - `public/index.html`: the page (no build step)
 - `public/config.js`: Supabase URL + publishable key for the early-access form
 - `public/_redirects`: forwards old app links (`/admin`) to dashboard.teamrota.app
-- Early-access sign-ups go to the `waitlist` table: run `../supabase/migrations/005_waitlist.sql` once.
+- Early-access sign-ups go to the `waitlist` table: run `supabase/waitlist.sql` once.
   Read them in Supabase → Table Editor → waitlist.
 
 Cloudflare: Workers & Pages → Create → Import repository → ROTA-App,

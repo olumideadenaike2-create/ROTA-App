@@ -1,59 +1,45 @@
-const sessions = [
-  ['Rig','Rig & Setup','2026-10-23','09:00:00',null,null,'13:30:00','Systems green by 1:30pm'],
-  ['S1','Session 1','2026-10-23','14:00:00','16:30:00','17:00:00','22:00:00'],
-  ['S2','Session 2','2026-10-24','06:30:00','08:30:00','09:00:00','14:00:00'],
-  ['S3','Session 3','2026-10-24','15:30:00','16:30:00','17:00:00','22:00:00'],
-  ['S4','Session 4','2026-10-25','13:00:00','15:30:00','16:00:00','21:00:00'],
-].map(([code,name,day,crew_call,doors,start_time,end_time,notes]) => ({ id: code, code, name, day, crew_call, doors, start_time, end_time, notes,
-  starts_at: `${day}T${crew_call}Z`, ends_at: `${day}T${end_time}Z` }))
-const pods = [{id:'p1',name:'Live Production',lead_id:'v1'},{id:'p2',name:'Photography',lead_id:'v8'},{id:'p3',name:'Roving Content'},{id:'p4',name:'Social & Comms'}]
-const R = [['p1','Broadcast',['Director / Vision Mixer','Camera 1','Camera 2','Camera 3','Camera 4','Graphics','Stream Engineer','Broadcast Audio','Floor Manager']],
-  ['p1','Record & Media',['ISO Record Operator','Media Manager (offload + verify)','Backup Runner']],
-  ['p1','After Show',['Producer','Host 1','Host 2','Camera','Audio']],
-  ['p2',null,['Lead Photographer','Photographer 2','Photographer 3']],['p3',null,['BTS Videographer','Testimony / Interview','Reels Shooter']],
-  ['p4',null,['Social Poster','Story & Community']]]
-const roles = []; R.forEach(([pod_id,section,names]) => names.forEach((name) => roles.push({ id: 'r'+roles.length, pod_id, section, name, sort_order: roles.length })))
-const names = ['Tunde Adeyemi','Grace Okafor','Samuel Mensah','Ruth Bello','David Eze','Esther Johnson','Michael Ade','Joy Nwosu','Daniel Oyelaran','Faith Akin','Peter Obi','Mercy Ola','John Uche','Blessing Ike','Caleb Ojo','Ruth Ade','Ade Bankole','Kemi Lawal','Femi Kuti','Ngozi Eke','Paul Ayo']
-const volunteers = names.map((name, i) => ({ id: 'v'+(i+1), name, phone: '07700 900' + (100+i), pod_id: i < 12 ? 'p1' : 'p2' }))
-const assignments = roles.map((r, i) => ({ id: 'a'+i, session_id: 'S1', role_id: r.id, volunteer_id: i < 21 ? 'v'+(i+1) : null,
-  room_position: i === 2 ? 'Riser, stage left' : null, callsign: i === 2 ? 'CAM 2' : null }))
-const checkIns = ['v1','v2','v3','v5','v6','v8','v9','v10','v12','v14','v15','v17','v19','v20'].map((v, i) => ({ id: 'c' + i, session_id: 'S1', volunteer_id: v, checked_in_at: `2026-10-23T13:${String(40+i).padStart(2,'0')}:00Z` }))
-const availability = volunteers.flatMap((v, i) => sessions.map((s, j) => ({ volunteer_id: v.id, session_id: s.id,
-  status: ['yes', 'yes', 'maybe', 'no', null][(i + j) % 5] }))).filter((x) => x.status)
-const tables = { sessions, pods, roles, volunteers, assignments, check_ins: checkIns, availability }
-
-const slot = (code, extra) => ({ session_id: code, ...sessions.find((s) => s.code === code), session_name: code, pod: 'Live Production', section: 'Broadcast',
-  role: 'Camera 2', pod_lead: 'Tunde Adeyemi', pod_lead_phone: '07700900100', room_position: 'Riser, stage left', callsign: 'CAM 2', ...extra })
-const myAnswers = { S1: 'yes', S3: 'no' }
-const rpcs = {
-  crew_availability: { sessions, answers: myAnswers },
-  crew_set_availability: { ok: true },
-  is_admin: true,
-  crew_list: volunteers.map((v, i) => ({ id: v.id, name: v.name, has_pin: i !== 2 })),
-  crew_schedule: { me: { id: 'v3', name: 'Samuel Mensah' }, schedule: [
-    slot('S1'), slot('S2', { role: 'Camera 3', room_position: 'Balcony centre', callsign: 'CAM 3' }),
-    slot('S4', { role: 'Floor Manager', room_position: 'Stage door', callsign: 'FLOOR' })],
-    pod_team: ['S1','S2','S4'].flatMap((sid) => roles.slice(0, 9).map((r, i) => ({ session_id: sid, pod: 'Live Production',
-      role: r.name, name: volunteers[i].name, callsign: r.name.startsWith('Camera') ? r.name.replace('Camera ', 'CAM ') : null,
-      is_me: i === 2, checked_in: sid === 'S1' && i % 3 !== 0 }))) },
+// In-memory stand-in for Supabase so the app can be clicked through without a project. Example data only.
+const uid = 'u-admin'
+const T = { churches: [], leaders: [], departments: [], units: [], roles: [], people: [], unit_members: [], invites: [] }
+let n = 0; const id = () => 'id' + ++n
+const TPL = { Media: { Broadcast: ['Director', 'Camera 1', 'Camera 2'], Photography: ['Lead Photographer'] }, Worship: { Vocals: ['Lead'], Band: ['Keys', 'Drums'] } }
+function query(table) {
+  let rows = () => T[table]; const filters = []; let op = 'select', payload
+  const run = () => {
+    let r = T[table].filter((x) => filters.every((f) => f(x)))
+    if (op === 'select') {
+      if (table === 'leaders') r = r.map((l) => ({ ...l, church: T.churches.find((c) => c.id === l.church_id) }))
+      return { data: r, error: null }
+    }
+    if (op === 'delete') { T[table] = T[table].filter((x) => !filters.every((f) => f(x))); return { data: null, error: null } }
+    if (op === 'update') { r.forEach((x) => Object.assign(x, payload)); return { data: null, error: null } }
+    if (op === 'insert') { const list = [].concat(payload).map((x) => ({ id: id(), sort: 0, created_at: new Date().toISOString(), ...x })); T[table].push(...list); return { data: list, error: null } }
+  }
+  const b = {
+    select() { return b }, order() { return b }, single() { return Promise.resolve({ ...run(), data: run().data?.[0] }) },
+    eq(c, v) { filters.push((x) => x[c] === v); return b }, in(c, vs) { filters.push((x) => vs.includes(x[c])); return b }, is(c, v) { filters.push((x) => (x[c] ?? null) === v); return b },
+    insert(p) { op = 'insert'; payload = p; const res = run(); return Object.assign(Promise.resolve(res), { select: () => ({ single: () => Promise.resolve({ data: res.data[0], error: null }), then: (f) => Promise.resolve(res).then(f) }) }) },
+    update(p) { op = 'update'; payload = p; return b }, delete() { op = 'delete'; return b },
+    then(f, g) { return Promise.resolve(run()).then(f, g) },
+  }
+  return b
 }
-const q = (data) => { const p = Promise.resolve({ data, error: null }); return Object.assign(p, { select: () => q(data), order: () => q(data), eq: () => q(data), single: () => q(data) }) }
-// Minimal writes so admin edits work in preview: update().eq(), upsert(onConflict), insert, delete().eq()
-const writer = (t) => Object.assign(q(tables[t]), {
-  update: (patch) => ({ eq: (col, val) => { tables[t].filter((r) => r[col] === val).forEach((r) => Object.assign(r, patch)); return q(null) } }),
-  upsert: (row, { onConflict } = {}) => {
-    const keys = (onConflict ?? 'id').split(',')
-    let r = tables[t].find((x) => keys.every((k) => x[k] === row[k]))
-    if (r) Object.assign(r, row); else tables[t].push(r = { id: 'n' + Math.random(), ...row })
-    return q(r)
-  },
-  insert: (row) => { tables[t].push({ id: 'n' + Math.random(), ...row }); return q(null) },
-  delete: () => ({ eq: (col, val) => { tables[t] = tables[t].filter((r) => r[col] !== val); return q(null) } }),
-})
 export const supabase = {
-  from: writer,
-  rpc: (n) => q(rpcs[n]),
-  auth: { getSession: async () => ({ data: { session: location.pathname.startsWith('/admin') ? {} : null } }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
-  channel: () => ({ on() { return this }, subscribe() { return this } }), removeChannel() {},
+  from: query,
+  rpc: async (name, a) => {
+    if (name === 'claim_invites') return { data: 0 }
+    if (name === 'church_leaders') return { data: T.leaders.map((l) => ({ ...l, email: 'pastor@grace.org' })) }
+    if (name === 'create_church') {
+      const cid = id(); T.churches.push({ id: cid, name: a.church_name, slug: a.church_slug, plan: 'trial', trial_ends_at: new Date(Date.now() + 14 * 864e5).toISOString() })
+      T.leaders.push({ id: id(), church_id: cid, user_id: uid, role: 'admin' })
+      a.templates.forEach((t, i) => { const did = id(); T.departments.push({ id: did, church_id: cid, name: t, sort: i })
+        Object.entries(TPL[t] || {}).forEach(([u, rs], j) => { const unit = id(); T.units.push({ id: unit, church_id: cid, department_id: did, name: u, sort: j })
+          rs.forEach((r, k) => T.roles.push({ id: id(), church_id: cid, unit_id: unit, name: r, sort: k })) }) })
+      return { data: cid }
+    }
+  },
+  auth: {
+    getSession: async () => ({ data: { session: { user: { id: uid, email: 'pastor@grace.org' } } } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }), signOut: async () => {},
+  },
 }

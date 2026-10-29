@@ -1,68 +1,28 @@
-# COPAK Crew
+# TeamRota
 
-A mobile-first app for the COPAK 2026 media team (23–25 Oct). Volunteers open a link, pick their name, and see their schedule. They tap **I'm here** to check in. The admin assigns people to role slots and watches a live check-in board.
+Rotas for every church department.
 
-- **Crew:** `https://rota-app.wealthwells24.workers.dev/`
-- **Admin:** `https://rota-app.wealthwells24.workers.dev/admin`
+| Address | What | Code | Cloudflare Worker |
+|---|---|---|---|
+| https://teamrota.app | Landing page + early-access form | `landing/` | `teamrota-landing` |
+| https://dashboard.teamrota.app | The app (church admins, heads, volunteers) | repo root | `rota-app` |
 
-Stack: React (Vite) + Tailwind, Supabase (Postgres + Auth), Cloudflare Workers. See [PLAN.md](PLAN.md) for the build plan.
+Both use one Supabase project. The old single-church COPAK app was retired on 29 Oct 2026.
 
-## 1. Supabase setup
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste in all of [`supabase/schema.sql`](supabase/schema.sql) and run it. This creates the tables, the RLS rules, the crew functions, the `photos` storage bucket, and realtime updates for check-ins.
-3. **Seed the data:** paste in [`supabase/seed.sql`](supabase/seed.sql) and run it. This adds the 5 sessions, the 4 pods with their 25 roles, and an empty ("Unassigned") slot for every role in every session.
-   - Times are stored as **Europe/London**. If the venue is in another time zone, find-and-replace `Europe/London` (for example with `Africa/Lagos`) before you run the seed. The zone is only used to work out which session is "now/next".
+## Database (Supabase SQL Editor)
+- `supabase/000_remove_old_app.sql`: one-off, removes the old COPAK tables. **Permanent.**
+- `supabase/001_foundation.sql`: churches, departments, units, roles, people, leaders, invites, events, with Row Level Security.
+- `landing/supabase/waitlist.sql`: early-access sign-ups (already run).
 
-## 2. Create your admin login
-**To add another admin who sets their own password:** Authentication → Users → **Add user → Send invitation**, then run the `insert into admins …` line below with their email. They click the email link, land on "Choose your password", and are signed in. (Authentication → URL Configuration: Site URL `https://rota-app.wealthwells24.workers.dev`, and add `https://rota-app.wealthwells24.workers.dev/admin` under Redirect URLs.) Anyone can use **Forgot password?** on the sign-in page later.
+Authentication → URL Configuration: Site URL `https://dashboard.teamrota.app`, Redirect URLs `https://dashboard.teamrota.app/**`.
 
-**Your own login:**
-1. Supabase → **Authentication → Users → Add user → Create new user**. Enter your email and a strong password, and tick "Auto confirm".
-2. Back in the SQL Editor, run:
-   ```sql
-   insert into admins (user_id) select id from auth.users where email = 'you@example.com';
-   ```
-3. Turn off public sign-up: **Authentication → Sign In / Providers → Email** → disable "Allow new users to sign up". (Even if someone did sign up, they wouldn't be in `admins`, so they couldn't see or change anything.)
+## Environment
+Cloudflare build variables (and `.env` locally): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_…`).
 
-## 3. Environment variables
-Find both values in Supabase → **Project Settings → API**.
+## Develop
+`npm install`, then `npm run dev`, or `npm run dev:mock` to click through with an in-memory stand-in (example data, nothing saved).
 
-| Variable | Value |
-|---|---|
-| `VITE_SUPABASE_URL` | Project URL, e.g. `https://abcd.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | The **publishable** key, `sb_publishable_…` (Project Settings → API Keys). Never use a secret / service-role key. The legacy `VITE_SUPABASE_ANON_KEY` still works if already set. |
-
-For local work: `cp .env.example .env`, fill in both values, then run `npm install && npm run dev`.
-
-## 4. Deploy to Cloudflare (recommended)
-Static requests on Cloudflare Workers are free and unmetered, so a traffic spike can't cause a bill or take the site down.
-1. Cloudflare dashboard → **Workers & Pages → Create → Import a repository** → pick **ROTA-App**.
-2. Build command: `npm run build` · Deploy command: `npx wrangler deploy` (default).
-3. **Settings → Variables and Secrets → Build variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`, then redeploy (Vite bakes them in at build time).
-4. `wrangler.jsonc` serves `dist/` and sends unknown paths (like `/admin`) to the app.
-5. In Supabase → **Authentication → URL Configuration**, set the Site URL and Redirect URL (`…/admin`) to the new address.
-
-`vercel.json` is kept so the old Vercel deployment keeps working during the switch; delete the Vercel project once Cloudflare is live.
-
-## Using it
-- **Crew tab:** add volunteers. **Pods tab:** set each pod's lead and deputy, and add or rename roles.
-- **Assign tab:** pick a session, pick a person for each slot, and type in the room position and callsign (they save when you tap out of the field). Use **Copy these assignments to…** to copy a finished session to another one, then adjust.
-- **Board tab:** live check-ins for each session. Tap a name to mark them here, or tap a green one to undo a check-in. Green = here, grey = assigned but missing, dashed = unassigned slot.
-- If a volunteer forgets their PIN: **Crew tab → ⋯ → Reset PIN**. They choose a new one the next time they open the app.
-
-## Updating an existing database
-If you ran `schema.sql` before a feature was added, run the matching file in `supabase/migrations/` in the SQL Editor:
-- `002_pod_team.sql` lets crew see who else is in their pod each session.
-- `003_availability.sql` lets crew say which sessions they can serve (Yes / Maybe / No). Admin sees it in the Crew table (coloured bar per session), the Assign dropdowns (available people first), the Crew filters, and the CSV export. You're warned before assigning someone to a session they said No or Maybe to.
-- `004_checkin_today_only.sql` only lets crew check in on the day of the session (Europe/London time); otherwise they see when check-in opens or that it has closed.
-
-## How crew access works (honest version)
-Crew don't have accounts. They pick their name and set a 4-digit PIN the first time they open the app. **This identifies people; it is not security.** It stops someone casually checking in a friend, and that's all.
-- The anon key cannot read or write any table directly. Every table has RLS with admin-only policies.
-- Crew go through 4 database functions (`crew_list`, `crew_set_pin`, `crew_schedule`, `crew_check_in`). Each checks the PIN on every call and returns or writes data for **that volunteer only**. `crew_list` returns names only, with no phone numbers. Crew can also see the names, roles and callsigns of others in their own pod for sessions they're on, but never their phone numbers.
-- PINs are stored as bcrypt hashes. After 5 wrong tries, that name is locked for 15 minutes.
-- The phone remembers the volunteer (name + PIN in local storage) so they don't need to log in again. "Not you?" clears it.
-- A 4-digit PIN can still be guessed by someone determined. Don't put anything sensitive in the app.
-
-## Preview without Supabase
-`npm run dev:mock` runs the app against made-up sample data (`.mock/`). Screenshots are in [`screenshots/`](screenshots/).
+## Status
+- **Phase 1 (done):** church sign-up with department templates; departments → units → roles; people with spreadsheet import; leader invites (admin, head/assistant of department, unit head/assistant), claimed when that email signs up.
+- **Phase 2 (next):** events, rota grid with drafts and Publish, accept/decline, availability, volunteer link + PIN, check-in and live board, swaps.
+- **Phase 3:** texts with credits (Twilio), emails (Resend), Stripe billing and plan limits.
