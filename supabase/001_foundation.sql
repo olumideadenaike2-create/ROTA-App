@@ -226,3 +226,7 @@ $$;
 
 revoke all on function create_church(text, text, text[]), claim_invites(), church_leaders(uuid) from public, anon;
 grant execute on function create_church(text, text, text[]), claim_invites(), church_leaders(uuid) to authenticated;
+
+-- Permission helpers are used by the rules above; signed-in users need them, the public doesn't.
+revoke execute on function is_member(uuid), is_admin(uuid), can_manage_department(uuid), can_manage_unit(uuid) from public, anon;
+grant execute on function is_member(uuid), is_admin(uuid), can_manage_department(uuid), can_manage_unit(uuid) to authenticated;
