@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { supabase } from './supabase'
 import Auth, { SetPassword } from './pages/Auth'
 import Onboarding from './pages/Onboarding'
@@ -8,6 +8,10 @@ import Overview from './pages/Overview'
 import Structure from './pages/Structure'
 import People from './pages/People'
 import Leaders from './pages/Leaders'
+import Services from './pages/Services'
+import Rota from './pages/Rota'
+import Today from './pages/Today'
+import CrewApp from './crew/CrewApp'
 
 // Invite and password-reset emails arrive with "type=invite" or "type=recovery" in the URL hash.
 const arrivedToSetPassword = /type=(invite|recovery)/.test(window.location.hash)
@@ -16,6 +20,12 @@ const ChurchCtx = createContext(null)
 export const useChurch = () => useContext(ChurchCtx)
 
 export default function App() {
+  // Volunteers' link (/c/<church>) needs no account, so it bypasses leader sign-in.
+  if (useLocation().pathname.startsWith('/c/')) return <Routes><Route path="/c/:slug" element={<CrewApp />} /></Routes>
+  return <LeaderApp />
+}
+
+function LeaderApp() {
   const [session, setSession] = useState(undefined)
   const [mustSetPassword, setMustSetPassword] = useState(arrivedToSetPassword)
 
@@ -41,7 +51,7 @@ function ChurchLoader({ user }) {
   const load = useCallback(async () => {
     await supabase.rpc('claim_invites') // turn any pending invites for this email into leader roles
     const { data, error } = await supabase.from('leaders')
-      .select('id, role, department_id, unit_id, church:churches(id, name, slug, plan, trial_ends_at)')
+      .select('id, role, department_id, unit_id, church:churches(id, name, slug, plan, trial_ends_at, timezone)')
       .eq('user_id', user.id)
     if (error) return setState({ loading: false, error: error.message })
     setState({ loading: false, mine: data })
@@ -62,6 +72,9 @@ function ChurchLoader({ user }) {
       <Routes>
         <Route element={<Shell />}>
           <Route index element={<Overview />} />
+          <Route path="today" element={<Today />} />
+          <Route path="rota" element={<Rota />} />
+          <Route path="services" element={<Services />} />
           <Route path="structure" element={<Structure />} />
           <Route path="people" element={<People />} />
           <Route path="leaders" element={<Leaders />} />

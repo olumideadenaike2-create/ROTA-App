@@ -68,7 +68,10 @@ export default function People() {
                   <p className="font-semibold">{p.name}</p>
                   <p className="text-sm text-stone-500">{[p.phone, p.email].filter(Boolean).join(' · ') || 'No contact details'}</p>
                 </div>
-                {isAdmin && <button className="text-sm text-red-700 underline" onClick={() => removePerson(p)}>Remove</button>}
+                <span className="flex gap-3 text-sm">
+                  <button className="text-stone-500 underline" onClick={async () => { if (confirm(`Reset ${p.name}'s PIN? They'll choose a new one next time they open the volunteer link.`)) { const { error } = await supabase.rpc('reset_pin', { pid: p.id }); setMsg(error ? error.message : `${p.name}'s PIN has been reset.`) } }}>Reset PIN</button>
+                  {isAdmin && <button className="text-red-700 underline" onClick={() => removePerson(p)}>Remove</button>}
+                </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {theirs.map((u) => (

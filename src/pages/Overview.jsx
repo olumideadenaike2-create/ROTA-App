@@ -18,6 +18,8 @@ export default function Overview() {
     ['Departments, units and roles', data.departments.length > 0, '/structure'],
     ['Add your volunteers', data.people.length > 0, '/people'],
     ['Put volunteers in units', data.members.length > 0, '/people'],
+    ['Add your services', false, '/services'],
+    ['Fill the rota and publish', false, '/rota'],
     ...(isAdmin ? [['Invite your heads of department', false, '/leaders']] : []),
   ]
 
@@ -26,7 +28,9 @@ export default function Overview() {
       <div>
         <p className="label">{church.name}</p>
         <h1 className="h1">Overview</h1>
-        <p className="mt-1 text-stone-600">Volunteer link: <b>teamrota.app/{church.slug}</b> <span className="text-stone-400">(goes live with the rota in the next release)</span></p>
+        <p className="mt-1 text-stone-600">Volunteer link: <a className="font-semibold text-olive-700 underline" href={`/c/${church.slug}`} target="_blank" rel="noreferrer">{window.location.host}/c/{church.slug}</a>
+          <button className="ml-2 text-sm text-stone-500 underline" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/c/${church.slug}`)}>Copy</button></p>
+        <p className="text-sm text-stone-500">Share it with your volunteers. They pick their name and set a 4-digit PIN.</p>
       </div>
 
       <section className="card">

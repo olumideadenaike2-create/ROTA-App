@@ -10,7 +10,7 @@ export const ROLE_LABEL = {
 
 export default function Shell() {
   const { church, churches, switchChurch, myRoles, isAdmin, user, error } = useChurch()
-  const nav = [['/', 'Overview'], ['/structure', 'Departments'], ['/people', 'People'], ...(isAdmin ? [['/leaders', 'Leaders']] : [])]
+  const nav = [['/', 'Overview'], ['/today', 'Today'], ['/rota', 'Rota'], ['/services', 'Services'], ['/structure', 'Departments'], ['/people', 'People'], ...(isAdmin ? [['/leaders', 'Leaders']] : [])]
   const link = ({ isActive }) => `rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap ${isActive ? 'bg-olive-600 text-white' : 'text-stone-600 hover:bg-stone-100'}`
   const trialDays = Math.max(0, Math.ceil((new Date(church.trial_ends_at) - Date.now()) / 86400000))
 
