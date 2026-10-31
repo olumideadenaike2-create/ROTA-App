@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { useChurch } from '../App'
 import { eventTimes, fmtDay } from '../lib/time'
 import { useEvents } from './Services'
+import { describeSend, sendQueued } from './Messages'
 
 const AVAIL = { yes: { mark: '✓', label: 'available' }, maybe: { mark: '?', label: 'maybe' }, no: { mark: '✗', label: 'not available' } }
 const REPLY = { pending: ['Awaiting reply', 'bg-amber-50 text-amber-800'], accepted: ['Accepted', 'bg-olive-100 text-olive-700'], declined: ['Declined', 'bg-red-50 text-red-700'] }
@@ -54,8 +55,10 @@ export default function Rota() {
     setBusy(false)
     if (error) return setMsg({ err: error.message })
     const n = new Set((changed ?? []).map((c) => c.person_id)).size
-    setMsg({ ok: `Published. ${n} ${n === 1 ? 'person' : 'people'} will see the change on their volunteer link. (Texts arrive in a later release.)` })
+    setMsg({ ok: `Published. ${n} ${n === 1 ? 'person' : 'people'} affected. Sending messages…` })
     load()
+    const sent = await sendQueued(church.id)
+    setMsg({ ok: `Published. ${n} ${n === 1 ? 'person' : 'people'} affected. ${describeSend(sent)}` })
   }
 
   return (
@@ -70,7 +73,7 @@ export default function Rota() {
         </div>
         <div className="text-right">
           <button className="btn-primary" onClick={publish} disabled={!drafts || busy}>{busy ? 'Publishing…' : `Publish changes (${drafts})`}</button>
-          <p className="mt-1 text-xs text-stone-500">Volunteers only see changes after you publish.</p>
+          <p className="mt-1 text-xs text-stone-500">Volunteers only see changes, and get a text, after you publish.</p>
         </div>
       </div>
       {msg?.ok && <p className="rounded-xl bg-olive-50 p-3 text-sm">{msg.ok}</p>}

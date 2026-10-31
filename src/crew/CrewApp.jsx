@@ -22,7 +22,8 @@ export default function CrewApp() {
   const fetchHome = useCallback(async (a) => {
     const { data, error } = await supabase.rpc('crew_home', { pid: a.id, pin: a.pin })
     if (error || data?.error) return error?.message ?? data.error
-    setHome(data); return null
+    const sw = await supabase.rpc('crew_swaps', { pid: a.id, pin: a.pin })
+    setHome({ ...data, swaps: sw.data?.swaps ?? [] }); return null
   }, [])
 
   useEffect(() => { if (auth) fetchHome(auth).then((e) => { if (e) { setErr(e); setAuth(null); save(slug, null) } }) }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -156,6 +157,7 @@ function Home({ auth, home, reload, onSignOut }) {
                   <span className={`pill ${s.reply === 'accepted' ? 'bg-olive-100 text-olive-700' : s.reply === 'declined' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>{s.reply === 'accepted' ? 'Accepted' : s.reply === 'declined' ? 'Declined' : 'Reply'}</span>
                 </div>
                 {s.reply !== 'pending' && <button className="mt-1 text-xs text-stone-500 underline" onClick={() => call('crew_reply', { aid: s.id, answer: s.reply === 'accepted' ? 'declined' : 'accepted' }, s.id)}>Change to {s.reply === 'accepted' ? '“can’t make it”' : '“accept”'}</button>}
+                <Cover auth={auth} slot={s} swap={home.swaps.find((w) => w.assignment_id === s.id && w.status !== 'cancelled')} onDone={reload} />
                 <Team rows={teamFor(s.event_id)} />
               </li>
             ))}
@@ -208,5 +210,46 @@ function Team({ rows, today }) {
         ))}
       </ul>
     </details>
+  )
+}
+
+// Ask someone in your unit to cover you. Your unit head approves it.
+function Cover({ auth, slot, swap, onDone }) {
+  const [opts, setOpts] = useState(null), [err, setErr] = useState(null), [busy, setBusy] = useState(false)
+  if (swap?.status === 'pending') return <p className="mt-1 text-xs text-amber-800">Cover requested from {swap.to}. Waiting for your unit head.</p>
+  if (swap?.status === 'approved') return <p className="mt-1 text-xs text-olive-700">{swap.to} is covering this. You’ll get a text when the rota is updated.</p>
+  async function open() {
+    const { data, error } = await supabase.rpc('crew_swap_options', { pid: auth.id, pin: auth.pin, aid: slot.id })
+    if (error || data?.error) return setErr(error?.message ?? data.error)
+    setOpts(data.options)
+  }
+  async function ask(p) {
+    setBusy(true)
+    const { data, error } = await supabase.rpc('crew_request_swap', { pid: auth.id, pin: auth.pin, aid: slot.id, to_pid: p.id })
+    setBusy(false)
+    if (error || data?.error) return setErr(error?.message ?? data.error)
+    setOpts(null); onDone()
+  }
+  if (!opts) return (
+    <div className="mt-1">
+      {swap?.status === 'declined' && <p className="text-xs text-red-700">Your last cover request was declined.</p>}
+      <button className="text-xs text-stone-500 underline" onClick={open}>Need cover?</button>
+      {err && <p className="text-xs text-red-700">{err}</p>}
+    </div>
+  )
+  return (
+    <div className="mt-2 rounded-xl bg-paper p-2">
+      <p className="text-xs text-stone-600">Ask someone in your unit who's free:</p>
+      {opts.length === 0 ? <p className="py-1 text-sm text-stone-500">Nobody in your unit is free. Talk to your unit head.</p> : (
+        <ul>{opts.map((p) => (
+          <li key={p.id} className="flex items-center justify-between py-1 text-sm">
+            <span>{p.name} <span className="text-stone-500">{p.availability === 'yes' ? '· available' : p.availability === 'maybe' ? '· maybe' : ''}</span></span>
+            <button className="btn-ghost btn-sm" disabled={busy} onClick={() => ask(p)}>Ask</button>
+          </li>))}
+        </ul>
+      )}
+      <button className="text-xs text-stone-500 underline" onClick={() => setOpts(null)}>Cancel</button>
+      {err && <p className="text-xs text-red-700">{err}</p>}
+    </div>
   )
 }

@@ -12,6 +12,8 @@ import Services from './pages/Services'
 import Rota from './pages/Rota'
 import Today from './pages/Today'
 import CrewApp from './crew/CrewApp'
+import Swaps from './pages/Swaps'
+import Messages from './pages/Messages'
 
 // Invite and password-reset emails arrive with "type=invite" or "type=recovery" in the URL hash.
 const arrivedToSetPassword = /type=(invite|recovery)/.test(window.location.hash)
@@ -75,6 +77,8 @@ function ChurchLoader({ user }) {
           <Route path="today" element={<Today />} />
           <Route path="rota" element={<Rota />} />
           <Route path="services" element={<Services />} />
+          <Route path="swaps" element={<Swaps />} />
+          <Route path="messages" element={<Messages />} />
           <Route path="structure" element={<Structure />} />
           <Route path="people" element={<People />} />
           <Route path="leaders" element={<Leaders />} />
